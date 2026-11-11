@@ -401,7 +401,7 @@ window.__ModuleLoader__.load({
   padding: 0 2px; font-size: 9px; line-height: 1.4;
   color: var(--dsw-alias-label-secondary); letter-spacing: .03em;
 }
-.pr-runbar-sec[data-kind="done"] .pr-runbar-sec-title { color: var(--dsw-alias-brand-primary); }
+.pr-runbar-sec[data-kind="done"] .pr-runbar-sec-title { color: #d97757; }
 .pr-runbar-sec-dot {
   width: 5px; height: 5px; border-radius: 50%; flex: 0 0 auto;
   background: var(--dsw-alias-state-success-primary);
@@ -409,7 +409,7 @@ window.__ModuleLoader__.load({
 .pr-runbar-sec-check {
   width: 10px; height: 10px; border-radius: 50%; flex: 0 0 auto;
   display: inline-flex; align-items: center; justify-content: center;
-  background: var(--dsw-alias-brand-primary); color: #fff;
+  background: #d97757; color: #fff;
   font-size: 8px; font-weight: 700; line-height: 1;
 }
 .pr-runbar-sec-label { flex: 0 0 auto; white-space: nowrap; }
@@ -426,7 +426,7 @@ window.__ModuleLoader__.load({
   /* 2026-11-11：一键已读搬进「完成未读」区的小标题里，靠右对齐 */
   flex: 0 0 auto; margin: 0 0 0 auto; padding: 1px 6px; border-radius: 8px;
   border: 1px solid var(--dsw-alias-border-l1); background: transparent;
-  color: var(--dsw-alias-brand-primary); font-size: 9.5px; line-height: 1.4;
+  color: #d97757; font-size: 9.5px; line-height: 1.4;
   white-space: nowrap; cursor: pointer;
 }
 .pr-readall:hover { background: var(--dsw-alias-bg-layer-2); }
@@ -459,7 +459,7 @@ window.__ModuleLoader__.load({
 .pr-run-done { display: inline-flex; align-items: center; gap: 3px; flex: 0 0 auto; font-size: 9px; line-height: 1; color: var(--dsw-alias-brand-primary); }
 .pr-run-check {
   width: 10px; height: 10px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
-  background: var(--dsw-alias-brand-primary); color: #fff; font-size: 8px; font-weight: 700; line-height: 1;
+  background: #d97757; color: #fff; font-size: 8px; font-weight: 700; line-height: 1;
 }
 .pr-run-elapsed { flex: 0 0 auto; font-size: 9px; line-height: 1; font-variant-numeric: tabular-nums; color: var(--dsw-alias-state-success-primary); }
 

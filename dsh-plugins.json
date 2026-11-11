@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-11-11T13:57:03.272Z",
+  "exportedAt": "2026-11-11T14:02:25.189Z",
   "plugins": [
     {
       "dir": "hub-desktop-ui",
@@ -11,7 +11,7 @@
     {
       "dir": "project-room",
       "name": "dsh-project-room",
-      "version": "0.2.3",
+      "version": "0.2.4",
       "description": "Project rooms for DeepSeek Harness: group sessions into projects, see per-project runtime, and open a room with a shared board, task list, todo queue and message delivery to member sessions.",
       "files": 8
     },
