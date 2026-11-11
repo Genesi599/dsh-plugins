@@ -7698,14 +7698,14 @@ function HubWorkspaces(props) {
       {
         key: 'hub.sidebar.hideNewSession',
         attr: 'data-hub-hide-new-session',
-        label: '隐藏侧栏「New Session」按钮',
-        hint: '收起侧栏顶部的新建会话胶囊按钮',
+        label: 'Hide sidebar "New Session" button',
+        hint: 'Remove the new-session pill at the top of the sidebar',
       },
       {
         key: 'hub.sidebar.hideMore',
         attr: 'data-hub-hide-more',
-        label: '隐藏侧栏「More」按钮',
-        hint: '收起面板列表下方的 More 启动器，给会话列表腾空间',
+        label: 'Hide sidebar "More" button',
+        hint: 'Remove the More launcher under the panel list',
       },
     ];
     function readToggle(toggle) {
@@ -7767,7 +7767,7 @@ function HubWorkspaces(props) {
         for (const toggle of SIDEBAR_TOGGLES) applyToggle(toggle, state[toggle.key]);
       }, [state]);
       return h('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px', padding: '4px 0' } },
-        h('div', { style: { fontSize: '13px', fontWeight: 600, marginBottom: '4px', color: 'var(--dsw-alias-label-primary)' } }, '侧栏'),
+        h('div', { style: { fontSize: '13px', fontWeight: 600, marginBottom: '4px', color: 'var(--dsw-alias-label-primary)' } }, 'Sidebar'),
         ...SIDEBAR_TOGGLES.map((toggle) => h(HubSidebarToggleRow, {
           key: toggle.key,
           label: toggle.label,
@@ -9565,7 +9565,7 @@ ctx.effect(() => {
         mount('sidebar.workspaces', { priority: -1 }, HubWorkspaces);
 
         // 2026-11-11：设置页「侧栏」分区（New Session / More 两颗按钮的开关）+ 启动时套用已存偏好
-        mount('settings.section', { id: 'hub-sidebar', order: 60, label: () => '侧栏' }, HubSidebarSettingsSection);
+        mount('settings.section', { id: 'hub-sidebar', order: 60, label: () => 'Sidebar' }, HubSidebarSettingsSection);
         ctx.effect(() => {
           for (const toggle of SIDEBAR_TOGGLES) applyToggle(toggle, readToggle(toggle));
         }, 'hub-desktop-ui: apply sidebar toggle preferences');
