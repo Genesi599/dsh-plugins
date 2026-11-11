@@ -1,0 +1,38 @@
+# AI-Agent-Hub 的 DSH 插件套装（cordis bundle patch）
+#
+# 由 `dsh-hub-suite` 包自带：装了这个包并把它加进 profile 的 dsh.profile.bundles 后，
+# 下面 4 个 host-only 插件会自动挂载（另外 4 个带前端/bundle 的包由 install.mjs 单独登记）。
+#
+# 可移植性说明（2026-11-11）：
+#   · reminders 的 hooksDir 在这里**故意不写**——第三方没有我们的 hooks 目录，
+#     插件会打印一条 warn 后跳过所有 hook（不会报错）。要用的话自己加：
+#         config: { hooksDir: /你的/hooks 目录 }
+#   · tool-policy / curator / branch 不依赖任何本机路径，默认配置直接可用。
+
+- insert:
+    - id: ai-agent-hub-reminders
+      name: 'dsh-hub-reminders'
+      config:
+        timeoutMs: 30000
+        maxBufferBytes: 1048576
+
+    - id: ai-agent-hub-tool-policy
+      name: 'dsh-hub-tool-policy'
+      config:
+        shellAsk: false
+        fsSpecialChannels: false
+        memorySizeCheck: true
+
+    - id: ai-agent-hub-curator
+      name: 'dsh-hub-curator'
+      config:
+        intervalTurns: 5
+        minIntervalMs: 60000
+        recentTurns: 3
+        maxChars: 5000
+        maxTokens: 800
+        signalThreshold: true
+        runCurator: true
+
+    - id: ai-agent-hub-branch
+      name: 'dsh-hub-branch'

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="AI-Agent-Hub">
+  <rect x="0.5" y="0.5" width="31" height="31" rx="8.5" fill="#17191c" stroke="#2e2e33"/>
+  <path d="M16 6.4 23.6 10.8v8.8L16 24v-4.1l3.9-2.3v-4.4L16 10.9Z" fill="#d97757"/>
+  <path d="M16 6.4 8.4 10.8v8.8L16 24v-4.1l-3.9-2.3v-4.4L16 10.9Z" fill="#8f6a5a"/>
+  <circle cx="16" cy="16.6" r="1.5" fill="#f1efe9"/>
+</svg>

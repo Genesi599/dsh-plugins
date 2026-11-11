@@ -1,0 +1,7 @@
+- insert:
+    - id: ai-agent-hub-tool-policy
+      name: 'dsh-hub-tool-policy'
+      config:
+        shellAsk: false
+        fsSpecialChannels: false
+        memorySizeCheck: true

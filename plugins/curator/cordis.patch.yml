@@ -1,0 +1,11 @@
+- insert:
+    - id: ai-agent-hub-curator
+      name: 'dsh-hub-curator'
+      config:
+        intervalTurns: 5
+        minIntervalMs: 60000
+        recentTurns: 3
+        maxChars: 5000
+        maxTokens: 800
+        signalThreshold: true
+        runCurator: true

@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Project Room",
+    "description": "Groups sessions into projects in the sidebar (per-project runtime, search, collapse, pin) and opens a room with a shared board, task list, todo queue and message delivery to member sessions."
+  }
+}

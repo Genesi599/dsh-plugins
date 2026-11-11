@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Reminders">
+  <rect x="3" y="3" width="58" height="58" rx="14" fill="#c96442"/>
+  <path d="M32 15a11 11 0 0 1 11 11v9l4 5H17l4-5v-9a11 11 0 0 1 11-11Z" fill="#fff8f3"/>
+  <path d="M27 44h10a5 5 0 0 1-10 0Z" fill="#8f3d24"/>
+  <circle cx="32" cy="13" r="2.6" fill="#fff8f3"/>
+</svg>

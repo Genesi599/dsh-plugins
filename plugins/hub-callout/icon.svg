@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Message callout">
+  <rect x="3" y="3" width="58" height="58" rx="14" fill="#c96442"/>
+  <rect x="11" y="14" width="42" height="36" rx="8" fill="#fff8f3"/>
+  <rect x="11" y="14" width="5" height="36" rx="2.5" fill="#8f3d24"/>
+  <rect x="22" y="23" width="24" height="4" rx="2" fill="#c96442"/>
+  <rect x="22" y="32" width="20" height="3" rx="1.5" fill="#d8a08d"/>
+  <rect x="22" y="39" width="23" height="3" rx="1.5" fill="#d8a08d"/>
+</svg>

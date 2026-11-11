@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Project Room">
+  <!-- 外框：一个房间 -->
+  <rect x="4" y="8" width="56" height="48" rx="8" fill="none" stroke="#06b6d4" stroke-width="3"/>
+  <!-- 顶部横梁：房间门楣 -->
+  <path d="M4 20h56" stroke="#06b6d4" stroke-width="2" opacity="0.55"/>
+  <!-- 三个成员方块（项目里的 agent） -->
+  <rect x="13" y="28" width="12" height="12" rx="3" fill="#06b6d4"/>
+  <rect x="26" y="32" width="10" height="10" rx="3" fill="#22d3ee" opacity="0.85"/>
+  <rect x="37" y="28" width="12" height="12" rx="3" fill="#06b6d4" opacity="0.7"/>
+  <!-- 底部待办行 -->
+  <path d="M13 47h38" stroke="#22d3ee" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+</svg>

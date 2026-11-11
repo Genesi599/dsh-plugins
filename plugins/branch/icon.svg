@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Session branches">
+  <rect x="3" y="3" width="58" height="58" rx="14" fill="#8b5cf6"/>
+  <path d="M24 18v28" stroke="#f5f3ff" stroke-width="4" stroke-linecap="round"/>
+  <path d="M24 31h10a6 6 0 0 0 6-6v-3" fill="none" stroke="#f5f3ff" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="24" cy="17" r="5" fill="#f5f3ff"/>
+  <circle cx="24" cy="47" r="5" fill="#f5f3ff"/>
+  <circle cx="40" cy="17" r="5" fill="#f5f3ff"/>
+</svg>

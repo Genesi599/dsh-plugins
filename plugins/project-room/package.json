@@ -1,0 +1,51 @@
+{
+  "name": "dsh-project-room",
+  "version": "0.2.3",
+  "type": "module",
+  "description": "Project rooms for DeepSeek Harness: group sessions into projects, see per-project runtime, and open a room with a shared board, task list, todo queue and message delivery to member sessions.",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true
+    }
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "plugin",
+    "dsh-plugin",
+    "workspace",
+    "sessions",
+    "sidebar",
+    "multi-agent",
+    "web-ui"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "test": "node test/smoke.mjs"
+  },
+  "engines": {
+    "dsh": ">=0.2.1-rc.1"
+  },
+  "peerDependencies": {
+    "dsh-hub-core": "^0.1.0"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "name": "dsh-hub-quota-panel",
+  "version": "0.1.3",
+  "description": "侧栏余额与用量面板：DeepSeek 账号余额 + 今日/本会话 token 用量（数据真实，失败显式提示）。",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "lib/quota-core.js",
+    "lib/pricing.js",
+    "lib/balance-ledger.js",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": []
+    }
+  },
+  "license": "MIT"
+}

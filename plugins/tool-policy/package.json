@@ -1,0 +1,24 @@
+{
+  "name": "dsh-hub-tool-policy",
+  "version": "0.1.3",
+  "type": "module",
+  "main": "./index.js",
+  "description": "DSH 工具调用策略：拦截内联多行 Python、微信转发、来源标签等高风险写法",
+  "files": [
+    "index.js",
+    "cordis.patch.yml",
+    "icon.svg"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Genesi599/AI-Agent-Hub.git",
+    "directory": "dsh/plugins/tool-policy"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "icon": "./icon.svg"
+}

@@ -1,0 +1,32 @@
+- insert:
+    - id: ai-agent-hub-reminders
+      name: 'dsh-hub-reminders'
+      config:
+        timeoutMs: 30000
+        maxBufferBytes: 1048576
+        scripts:
+          - session_memory_check.py
+          - report_navigation_reminder.py
+          - hpc_parallel_check.py
+          - memory_update_reminder.py
+          - drawing_standards_check.py
+          - fork_prompt_reminder.py
+          - imitate_figure_reminder.py
+          - image_host_reminder.py
+          - enrichment_term_check.py
+          - humanizer_reminder.py
+          - ppt_standard_check.py
+          - anti_hallucination_reminder.py
+          - answer_format_reminder.py
+          - url_format_reminder.py
+          - media_link_check.py
+          - zotero_first_reminder.py
+          - wiki_write_reminder.py
+          - memory_route_reminder.py
+          - ai_query_reminder.py
+          - figure_split_reminder.py
+          - test_session_cleanup_reminder.py
+          - figure_change_gate_reminder.py
+          - secret_store_reminder.py
+          - analysis_method_standards_reminder.py
+          - figure_text_consistency_reminder.py

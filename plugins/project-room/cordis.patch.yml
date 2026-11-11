@@ -1,0 +1,4 @@
+# dsh-project-room — DeepSeek Harness bundle patch layer.
+- insert:
+    - id: project-room
+      name: 'dsh-project-room'

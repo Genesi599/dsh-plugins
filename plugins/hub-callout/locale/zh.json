@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "消息提示块",
+    "description": "把消息里的 GitHub admonition 语法（> [!NOTE]、> [!BOOK] 等）渲染成带彩色标题的提示块卡片。"
+  }
+}

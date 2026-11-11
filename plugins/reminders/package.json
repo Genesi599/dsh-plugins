@@ -1,0 +1,24 @@
+{
+  "name": "dsh-hub-reminders",
+  "version": "0.1.4",
+  "type": "module",
+  "main": "./plugin.js",
+  "description": "DSH 会话 hook 注入：按白名单运行仓库 hooks/*.py，并把提醒文本注入每一轮（开工自检 / 测试清理 / 实事求是等）",
+  "files": [
+    "plugin.js",
+    "cordis.patch.yml",
+    "icon.svg"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Genesi599/AI-Agent-Hub.git",
+    "directory": "dsh/plugins/reminders"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "icon": "./icon.svg"
+}

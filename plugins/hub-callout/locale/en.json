@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Message Callouts",
+    "description": "Renders GitHub-style admonitions (> [!NOTE], > [!BOOK], …) inside messages as colored callout cards."
+  }
+}

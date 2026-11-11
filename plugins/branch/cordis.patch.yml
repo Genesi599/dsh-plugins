@@ -1,0 +1,3 @@
+- insert:
+    - id: ai-agent-hub-branch
+      name: 'dsh-hub-branch'

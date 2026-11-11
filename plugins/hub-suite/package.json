@@ -1,0 +1,35 @@
+{
+  "name": "dsh-hub-suite",
+  "version": "0.1.2",
+  "description": "AI-Agent-Hub 的 DSH 插件套装：一条命令装齐 project-room / hub-desktop-ui / callout / quota-panel / reminders / tool-policy / curator / branch（含依赖闭包）。其他插件包：dsh-hub-core、dsh-compact-tool 等由依赖自动带入。",
+  "type": "module",
+  "bin": {
+    "dsh-hub-suite": "./install.mjs"
+  },
+  "files": [
+    "install.mjs",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "dependencies": {
+    "dsh-hub-desktop-ui": "^0.2.3",
+    "dsh-project-room": "^0.2.3",
+    "dsh-hub-callout": "^0.1.1",
+    "dsh-hub-quota-panel": "^0.1.2",
+    "dsh-hub-reminders": "^0.1.2",
+    "dsh-hub-tool-policy": "^0.1.1",
+    "dsh-hub-curator": "^0.1.1",
+    "dsh-hub-branch": "^0.1.1"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Genesi599/AI-Agent-Hub.git",
+    "directory": "dsh/plugins/hub-suite"
+  }
+}
