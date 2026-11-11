@@ -146,6 +146,14 @@ window.__ModuleLoader__.load({
    折叠成 48px 图标轨时该按钮同样隐藏（外壳会把 fixed 定位到 titlebar 里，display:none 一并覆盖）。 */
 [data-slot="sidebar"] button[class*="_newSession"] { display: none !important; }
 
+/* 侧栏「More」面板列表启动器（2026-11-11 用户：「这个也隐藏吧…在设置里面加一个选项」）→
+   受设置开关控制：<html data-hub-hide-more> 存在时才隐藏。
+   出厂结构：PanelMoreMenu 的 <button class="<hash>_panelRow" aria-haspopup="menu">（图标 IconAppsAddOutlineRegular）。
+   _panelRow 也用在普通面板行上，所以再加 aria-haspopup="menu" 限定，只命中这一个。 */
+html[data-hub-hide-more] [data-slot="sidebar"] button[class*="_panelRow"][aria-haspopup="menu"] {
+  display: none !important;
+}
+
 /* 侧栏缩放（2026-10-25 用户要求「侧边栏网页要能缩放」）：Ctrl+滚轮调
    --hub-sidebar-zoom（0.7–1.8），整列 zoom 缩放、宽度随轨道自适应；
    Ctrl+0 复位 1。变量由 JS 设在 documentElement 上并持久化 localStorage。 */
@@ -7682,6 +7690,69 @@ function HubWorkspaces(props) {
       );
     }
 
+    /* 2026-11-11 用户：「这个也隐藏吧，感觉没什么用，在设置里面加一个选项，隐藏或者显示」——
+       设置页新增「侧栏」分区，一行开关控制侧栏面板列表的 More 启动器。
+       偏好存 localStorage['hub.sidebar.hideMore']，落到 <html data-hub-hide-more>，
+       隐藏由 SKIN_CSS 的 html[data-hub-hide-more] … 规则执行。 */
+    const HIDE_MORE_KEY = 'hub.sidebar.hideMore';
+    function readHideMore() {
+      // 默认隐藏（用户 2026-11-11：「这个也隐藏吧，感觉没什么用」）；
+      // 只有显式存成 '0' 才显示回来。
+      try { return window.localStorage.getItem(HIDE_MORE_KEY) !== '0'; } catch (error) { return true; }
+    }
+    function applyHideMore(on) {
+      try {
+        const root = document.documentElement;
+        if (on) root.setAttribute('data-hub-hide-more', '');
+        else root.removeAttribute('data-hub-hide-more');
+      } catch (error) { /* ignore */ }
+    }
+    function HubSidebarSettingsSection() {
+      const [hideMore, setHideMore] = React.useState(readHideMore);
+      React.useEffect(() => { applyHideMore(hideMore); }, [hideMore]);
+      const toggle = () => {
+        const next = !hideMore;
+        setHideMore(next);
+        try { window.localStorage.setItem(HIDE_MORE_KEY, next ? '1' : '0'); } catch (error) { /* ignore */ }
+      };
+      return h('div', { style: { display: 'flex', flexDirection: 'column', gap: '12px', padding: '4px 0' } },
+        h('div', { style: { fontSize: '13px', fontWeight: 600, color: 'var(--dsw-alias-label-primary)' } }, '侧栏'),
+        h('div', {
+          role: 'switch',
+          'aria-checked': hideMore ? 'true' : 'false',
+          tabIndex: 0,
+          onClick: toggle,
+          onKeyDown: (event) => {
+            if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggle(); }
+          },
+          style: {
+            display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px',
+            borderRadius: '10px', background: 'var(--dsw-alias-bg-layer-2)', cursor: 'pointer', userSelect: 'none',
+          },
+        },
+          h('div', { style: { display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 } },
+            h('span', { style: { fontSize: '13px', color: 'var(--dsw-alias-label-primary)' } }, '隐藏侧栏「More」按钮'),
+            h('span', { style: { fontSize: '11.5px', color: 'var(--dsw-alias-label-secondary)' } }, '收起面板列表下方的 More 启动器，给会话列表腾空间'),
+          ),
+          h('span', {
+            'aria-hidden': 'true',
+            style: {
+              marginLeft: 'auto', flex: '0 0 40px', width: '40px', height: '22px', borderRadius: '11px',
+              background: hideMore ? '#d97757' : 'var(--dsw-alias-border-l2)',
+              position: 'relative', transition: 'background .15s ease',
+            },
+          },
+            h('span', {
+              style: {
+                position: 'absolute', top: '3px', left: hideMore ? '21px' : '3px', width: '16px', height: '16px',
+                borderRadius: '50%', background: '#fff', transition: 'left .15s ease',
+              },
+            }),
+          ),
+        ),
+      );
+    }
+
     return {
       inject: ['slots', 'theme'],
       apply(ctx) {
@@ -9463,6 +9534,10 @@ ctx.effect(() => {
         // 整块浏览区：用「项目行 + 芯片网格」替换出厂 WorkspaceBrowser
         // （会接管搜索/拖拽/右键菜单这些出厂能力，本版先做只读浏览 + 开会话）。
         mount('sidebar.workspaces', { priority: -1 }, HubWorkspaces);
+
+        // 2026-11-11：设置页「侧栏」分区（隐藏 More 按钮的开关）+ 启动时套用已存偏好
+        mount('settings.section', { id: 'hub-sidebar', order: 60, label: () => '侧栏' }, HubSidebarSettingsSection);
+        ctx.effect(() => { applyHideMore(readHideMore()); }, 'hub-desktop-ui: apply hide-more preference');
 
         // 2026-11-11 用户令「可以不覆盖吗」：不再拦截出厂的「New Session」按钮，恢复它原本行为。
         // 「New project」弹窗组件仍挂在 overlay 上（NewProjectDialog 自己渲染 null），
