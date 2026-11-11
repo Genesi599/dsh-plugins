@@ -1,11 +1,11 @@
 {
-  "exportedAt": "2026-11-11T13:46:12.952Z",
+  "exportedAt": "2026-11-11T13:50:15.452Z",
   "plugins": [
     {
       "dir": "hub-desktop-ui",
       "name": "dsh-hub-desktop-ui",
-      "version": "0.2.4",
-      "description": "AI-Agent-Hub 的 DSH 前端形态插件：暖色暗调配色、紧凑会话侧栏、侧栏底部状态卡与项目/任务线视图（不覆盖 DSH 默认的侧栏品牌标志）。",
+      "version": "0.2.5",
+      "description": "AI-Agent-Hub 的 DSH 前端形态插件：暖色暗调配色、紧凑会话侧栏、侧栏底部状态卡与项目/任务线视图。",
       "files": 12
     },
     {
@@ -32,7 +32,7 @@
     {
       "dir": "reminders",
       "name": "dsh-hub-reminders",
-      "version": "0.1.4",
+      "version": "0.1.5",
       "description": "DSH 会话 hook 注入：按白名单运行仓库 hooks/*.py，并把提醒文本注入每一轮（开工自检 / 测试清理 / 实事求是等）",
       "files": 4
     },

@@ -30,3 +30,4 @@
           - secret_store_reminder.py
           - analysis_method_standards_reminder.py
           - figure_text_consistency_reminder.py
+          - no_defensive_disclaimer_reminder.py

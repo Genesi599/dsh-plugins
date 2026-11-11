@@ -25,6 +25,7 @@ const SCRIPT_ALLOWLIST = Object.freeze([
   "media_link_check.py",
   "analysis_method_standards_reminder.py",
   "figure_text_consistency_reminder.py",
+  "no_defensive_disclaimer_reminder.py",
   "zotero_first_reminder.py",
   "wiki_write_reminder.py",
   "memory_route_reminder.py",
