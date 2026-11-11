@@ -26,6 +26,7 @@ import {
   INTERRUPT_IDLE_WAIT_MS,
   RESUME_MAX_PER_BOOT,
   ARCHIVE_MIN_AGE_MS,
+  applyTaskStatusMutation,
   shouldSkipResumeByLedger,
   looksTaskSpecificName,
   deliveryConclusion,
@@ -258,8 +259,12 @@ e. 回用户一句：已派给谁、任务号、准备做什么。**不要在同
 **恢复**：已归档的线又被用户提到 / 又被派活 → 立刻把 \`status\` 改回 "active"，
   并在群里说一句「这条线重新打开了」。
 
-写入方式：直接改 .hub/projects/${name}/tasks.json 里对应对象的 \`status\`。
-客户端「已归档 N 条任务线」可以展开，带「恢复」按钮（改回 active），但**归档决定权在你**。
+写入方式（**任何 agent 都可以做，不必等 Yat2**，分身 / 分诊线一样可以）：
+  - 推荐 \`POST /hub/task-status\`（Host 写盘，顺带记轮次计数）：body = \`{project, taskId, status: "archived"|"active", goalState?}\`；
+  - 也可以直接改 .hub/projects/${name}/tasks.json 里对应对象的 \`status\`。
+另：闲置任务线会**自动归档**（事件驱动，非轮询）—— 每次改任务线算 1 轮，某条 active 线超过
+\`tasks.json.autoArchiveRounds\`（默认 30）轮没被触及就自动置 archived，字段 \`autoArchivedAtRound\` 记录是第几轮归档的；恢复同样是改回 active 即可。
+客户端「已归档 N 条任务线」可以展开，带「恢复」按钮（改回 active），归档决定谁都能做。
 
 ## 逐条归线（收到用户消息必须做）
 ## 逐条归线（收到用户消息必须做，插件会强制检查）
@@ -268,7 +273,7 @@ e. 回用户一句：已派给谁、任务号、准备做什么。**不要在同
 
 1. \`taskline_messages {session: "<你的会话>"}\` —— 拿到最新用户消息的 \`eventId\`；
 2. 判定它属于哪条任务线（已有就沿用；新任务就 \`taskline_create\` + 写进 tasks.json）；
-3. 写 .hub/projects/${name}/routing.json（累积，不要覆盖已有条目）：
+3. 写 .hub/projects/${name}/routing.json（**任何 agent 都可以写**，累积，不要覆盖已有条目）：
 
 \`\`\`json
 { "<eventId>": "<taskId>" }
@@ -3679,25 +3684,20 @@ export function apply(ctx, config = {}) {
           if (!path) return reply({ ok: false, error: 'invalid project' });
           const file = join(dirname(path), 'tasks.json');
           const data = JSON.parse(readFileSync(file, 'utf8'));
-          let changed = false;
-          const applyPatch = (task) => {
-            if (!task || typeof task !== 'object') return;
-            if (status) task.status = status;
-            if (goalState) task.goalState = goalState;
-            changed = true;
-          };
-          if (Array.isArray(data.tasks)) {
-            for (const task of data.tasks) {
-              if (task && (String(task.id) === taskId || String(task.title) === taskId)) applyPatch(task);
-            }
-          } else if (data[taskId] && typeof data[taskId] === 'object') {
-            applyPatch(data[taskId]);
-          }
-          if (changed) writeJsonAtomic(file, data);
+          // 2026-11-11 用户令：闲置任务线自动归档，事件驱动（不轮询）。
+          // 纯逻辑在 dsh-hub-core/tasks.js 的 applyTaskStatusMutation（带单测）。
+          // 轮 = 任务线被编辑的次数；每次成功改动算 1 轮，顺手归档「超过阈值没被触及」的 active 线。
+          const result = applyTaskStatusMutation(data, {
+            taskId, status, goalState, autoArchiveRounds: body.autoArchiveRounds,
+          });
+          if (!result.changed && result.error) return reply({ ok: false, error: result.error });
+          if (result.changed) writeJsonAtomic(file, data);
           return reply({
-            ok: changed, taskId,
+            ok: result.changed, taskId,
             ...(status ? { status } : {}),
             ...(goalState ? { goalState } : {}),
+            round: result.round,
+            ...(result.autoArchived.length ? { autoArchived: result.autoArchived } : {}),
           });
         } catch (error) {
           return reply({ ok: false, error: String(error && error.message) });
