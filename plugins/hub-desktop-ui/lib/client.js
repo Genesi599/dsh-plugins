@@ -6424,7 +6424,11 @@ function HubWorkspaces(props) {
               } catch { /* ignore */ }
             }
           });
-          return defs.filter((lane) => lane.memberIds.length > 0);
+          // 2026-11-11 用户令「任务线不要和成员绑定」：不再按成员过滤。
+          // 任务线由 tasks.json 定义，消息归线靠 routing.json（eventId → taskId），
+          // memberIds 只是可选元数据（头像 / 运行态 / 输入投递目标）；成员会话归档、
+          // 改名、甚至一个成员都匹配不上时，这条线照样存在，只要 routing 里有归属就渲染。
+          return defs;
         }
         return members.map((member) => {
           const meta = metaOf(member);
