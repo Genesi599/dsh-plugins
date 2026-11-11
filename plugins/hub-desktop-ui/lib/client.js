@@ -139,12 +139,12 @@ window.__ModuleLoader__.load({
   border-radius: 10px !important;
 }
 
-/* 侧栏顶部的「New Session」胶囊按钮（2026-11-11 用户问「这个能隐藏吗」）→ 隐藏。
+/* 侧栏顶部的「New Session」胶囊按钮（2026-11-11 用户问「这个能隐藏吗」）→ 受设置开关控制：
+   <html data-hub-hide-new-session> 存在时才隐藏。设置页「侧栏」分区里有一行对应开关。
    出厂结构：<button type="button" class="<hash>_newSession" aria-label="New session">，
    <hash> 随构建变、后缀 _newSession 稳定 → 按子串匹配。
-   带 button 标签限定，避免连带命中 _newSessionLabel / _newSessionContent 等内部节点。
-   折叠成 48px 图标轨时该按钮同样隐藏（外壳会把 fixed 定位到 titlebar 里，display:none 一并覆盖）。 */
-[data-slot="sidebar"] button[class*="_newSession"] { display: none !important; }
+   带 button 标签限定，避免连带命中 _newSessionLabel / _newSessionContent 等内部节点。 */
+html[data-hub-hide-new-session] [data-slot="sidebar"] button[class*="_newSession"] { display: none !important; }
 
 /* 侧栏「More」面板列表启动器（2026-11-11 用户：「这个也隐藏吧…在设置里面加一个选项」）→
    受设置开关控制：<html data-hub-hide-more> 存在时才隐藏。
@@ -7690,66 +7690,95 @@ function HubWorkspaces(props) {
       );
     }
 
-    /* 2026-11-11 用户：「这个也隐藏吧，感觉没什么用，在设置里面加一个选项，隐藏或者显示」——
-       设置页新增「侧栏」分区，一行开关控制侧栏面板列表的 More 启动器。
-       偏好存 localStorage['hub.sidebar.hideMore']，落到 <html data-hub-hide-more>，
-       隐藏由 SKIN_CSS 的 html[data-hub-hide-more] … 规则执行。 */
-    const HIDE_MORE_KEY = 'hub.sidebar.hideMore';
-    function readHideMore() {
-      // 默认隐藏（用户 2026-11-11：「这个也隐藏吧，感觉没什么用」）；
-      // 只有显式存成 '0' 才显示回来。
-      try { return window.localStorage.getItem(HIDE_MORE_KEY) !== '0'; } catch (error) { return true; }
+    /* 2026-11-11 用户：「这个（More）也隐藏吧…在设置里面加一个选项，隐藏或者显示」，
+       随后又问「还有 new session 的开关呢」→ 设置页「侧栏」分区里两行开关，各自控制一颗出厂按钮。
+       偏好存 localStorage，落到 <html data-hub-…>，隐藏由 SKIN_CSS 里对应的 html[...] 规则执行。
+       默认都是隐藏（用户觉得这两颗按钮没用），只有显式存成 '0' 才显示回来。 */
+    const SIDEBAR_TOGGLES = [
+      {
+        key: 'hub.sidebar.hideNewSession',
+        attr: 'data-hub-hide-new-session',
+        label: '隐藏侧栏「New Session」按钮',
+        hint: '收起侧栏顶部的新建会话胶囊按钮',
+      },
+      {
+        key: 'hub.sidebar.hideMore',
+        attr: 'data-hub-hide-more',
+        label: '隐藏侧栏「More」按钮',
+        hint: '收起面板列表下方的 More 启动器，给会话列表腾空间',
+      },
+    ];
+    function readToggle(toggle) {
+      try { return window.localStorage.getItem(toggle.key) !== '0'; } catch (error) { return true; }
     }
-    function applyHideMore(on) {
+    function writeToggle(toggle, on) {
+      try { window.localStorage.setItem(toggle.key, on ? '1' : '0'); } catch (error) { /* ignore */ }
+    }
+    function applyToggle(toggle, on) {
       try {
         const root = document.documentElement;
-        if (on) root.setAttribute('data-hub-hide-more', '');
-        else root.removeAttribute('data-hub-hide-more');
+        if (on) root.setAttribute(toggle.attr, '');
+        else root.removeAttribute(toggle.attr);
       } catch (error) { /* ignore */ }
     }
-    function HubSidebarSettingsSection() {
-      const [hideMore, setHideMore] = React.useState(readHideMore);
-      React.useEffect(() => { applyHideMore(hideMore); }, [hideMore]);
-      const toggle = () => {
-        const next = !hideMore;
-        setHideMore(next);
-        try { window.localStorage.setItem(HIDE_MORE_KEY, next ? '1' : '0'); } catch (error) { /* ignore */ }
-      };
-      return h('div', { style: { display: 'flex', flexDirection: 'column', gap: '12px', padding: '4px 0' } },
-        h('div', { style: { fontSize: '13px', fontWeight: 600, color: 'var(--dsw-alias-label-primary)' } }, '侧栏'),
-        h('div', {
-          role: 'switch',
-          'aria-checked': hideMore ? 'true' : 'false',
-          tabIndex: 0,
-          onClick: toggle,
-          onKeyDown: (event) => {
-            if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggle(); }
-          },
+    function HubSidebarToggleRow(props) {
+      const { label, hint, on, onChange } = props;
+      return h('div', {
+        role: 'switch',
+        'aria-checked': on ? 'true' : 'false',
+        tabIndex: 0,
+        onClick: onChange,
+        onKeyDown: (event) => {
+          if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onChange(); }
+        },
+        style: {
+          display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px',
+          borderRadius: '10px', background: 'var(--dsw-alias-bg-layer-2)', cursor: 'pointer', userSelect: 'none',
+        },
+      },
+        h('div', { style: { display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 } },
+          h('span', { style: { fontSize: '13px', color: 'var(--dsw-alias-label-primary)' } }, label),
+          h('span', { style: { fontSize: '11.5px', color: 'var(--dsw-alias-label-secondary)' } }, hint),
+        ),
+        h('span', {
+          'aria-hidden': 'true',
           style: {
-            display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px',
-            borderRadius: '10px', background: 'var(--dsw-alias-bg-layer-2)', cursor: 'pointer', userSelect: 'none',
+            marginLeft: 'auto', flex: '0 0 40px', width: '40px', height: '22px', borderRadius: '11px',
+            background: on ? '#d97757' : 'var(--dsw-alias-border-l2)',
+            position: 'relative', transition: 'background .15s ease',
           },
         },
-          h('div', { style: { display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 } },
-            h('span', { style: { fontSize: '13px', color: 'var(--dsw-alias-label-primary)' } }, '隐藏侧栏「More」按钮'),
-            h('span', { style: { fontSize: '11.5px', color: 'var(--dsw-alias-label-secondary)' } }, '收起面板列表下方的 More 启动器，给会话列表腾空间'),
-          ),
           h('span', {
-            'aria-hidden': 'true',
             style: {
-              marginLeft: 'auto', flex: '0 0 40px', width: '40px', height: '22px', borderRadius: '11px',
-              background: hideMore ? '#d97757' : 'var(--dsw-alias-border-l2)',
-              position: 'relative', transition: 'background .15s ease',
+              position: 'absolute', top: '3px', left: on ? '21px' : '3px', width: '16px', height: '16px',
+              borderRadius: '50%', background: '#fff', transition: 'left .15s ease',
             },
-          },
-            h('span', {
-              style: {
-                position: 'absolute', top: '3px', left: hideMore ? '21px' : '3px', width: '16px', height: '16px',
-                borderRadius: '50%', background: '#fff', transition: 'left .15s ease',
-              },
-            }),
-          ),
+          }),
         ),
+      );
+    }
+    function HubSidebarSettingsSection() {
+      const [state, setState] = React.useState(() => {
+        const initial = {};
+        for (const toggle of SIDEBAR_TOGGLES) initial[toggle.key] = readToggle(toggle);
+        return initial;
+      });
+      React.useEffect(() => {
+        for (const toggle of SIDEBAR_TOGGLES) applyToggle(toggle, state[toggle.key]);
+      }, [state]);
+      return h('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px', padding: '4px 0' } },
+        h('div', { style: { fontSize: '13px', fontWeight: 600, marginBottom: '4px', color: 'var(--dsw-alias-label-primary)' } }, '侧栏'),
+        ...SIDEBAR_TOGGLES.map((toggle) => h(HubSidebarToggleRow, {
+          key: toggle.key,
+          label: toggle.label,
+          hint: toggle.hint,
+          on: state[toggle.key],
+          onChange: () => {
+            const next = !state[toggle.key];
+            writeToggle(toggle, next);
+            setState((prev) => ({ ...prev, [toggle.key]: next }));
+          },
+        })),
       );
     }
 
@@ -9535,9 +9564,11 @@ ctx.effect(() => {
         // （会接管搜索/拖拽/右键菜单这些出厂能力，本版先做只读浏览 + 开会话）。
         mount('sidebar.workspaces', { priority: -1 }, HubWorkspaces);
 
-        // 2026-11-11：设置页「侧栏」分区（隐藏 More 按钮的开关）+ 启动时套用已存偏好
+        // 2026-11-11：设置页「侧栏」分区（New Session / More 两颗按钮的开关）+ 启动时套用已存偏好
         mount('settings.section', { id: 'hub-sidebar', order: 60, label: () => '侧栏' }, HubSidebarSettingsSection);
-        ctx.effect(() => { applyHideMore(readHideMore()); }, 'hub-desktop-ui: apply hide-more preference');
+        ctx.effect(() => {
+          for (const toggle of SIDEBAR_TOGGLES) applyToggle(toggle, readToggle(toggle));
+        }, 'hub-desktop-ui: apply sidebar toggle preferences');
 
         // 2026-11-11 用户令「可以不覆盖吗」：不再拦截出厂的「New Session」按钮，恢复它原本行为。
         // 「New project」弹窗组件仍挂在 overlay 上（NewProjectDialog 自己渲染 null），
