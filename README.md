@@ -37,7 +37,7 @@ npm install dsh-hub-reminders        # 换成你要的包名
 
 | 目录 | 包名 | 版本 | 说明 |
 |---|---|---|---|
-| `plugins/hub-desktop-ui` | dsh-hub-desktop-ui | 0.2.3 | AI-Agent-Hub 的 DSH 前端形态插件：暖色暗调、紧凑侧栏、品牌标记与侧栏状态卡。 |
+| `plugins/hub-desktop-ui` | dsh-hub-desktop-ui | 0.2.4 | AI-Agent-Hub 的 DSH 前端形态插件：暖色暗调配色、紧凑会话侧栏、侧栏底部状态卡与项目/任务线视图（不覆盖 DSH 默认的侧栏品牌标志）。 |
 | `plugins/project-room` | dsh-project-room | 0.2.3 | Project rooms for DeepSeek Harness: group sessions into projects, see per-project runtime, and open a room with a shared board, task list, todo queue and message delivery to member sessions. |
 | `plugins/hub-callout` | dsh-hub-callout | 0.1.1 | 把消息里的 GitHub admonition 语法（> [!NOTE] / > [!BOOK] 等）渲染成带彩色标题的提示块。 |
 | `plugins/quota-panel` | dsh-hub-quota-panel | 0.1.3 | 侧栏余额与用量面板：DeepSeek 账号余额 + 今日/本会话 token 用量（数据真实，失败显式提示）。 |

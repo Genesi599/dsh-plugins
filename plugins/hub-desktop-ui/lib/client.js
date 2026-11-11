@@ -9353,10 +9353,13 @@ function HubWorkspaces(props) {
         clientCtx = ctx;
 
         mount('sidebar.footer.action', { id: 'hub-status-card', order: 50 }, HubStatusCard);
-        // 单座位：出厂 occupant 在 priority 0，priority 更低者胜 → -1 覆盖，
-        // 且必须用不同的 priority，否则会被判成重复注册。
-        mount('sidebar.brand.mark', { priority: -1 }, HubBrandMark);
-        mount('sidebar.brand.name', { priority: -1 }, HubBrandName);
+        // 2026-11-11 用户令「不需要品牌标记」：**不再覆盖**侧栏顶部的品牌槽位。
+        // 槽位空出来后由 DSH 自己兜底（@deepseek-ai/dsh-client-ui-sidebar 的
+        // renderSlot('sidebar.brand.mark', { size: 24 }, { fallback: FishLogo })），
+        // 于是侧栏顶部恢复出厂标志；品牌名同理交回 DSH。
+        // 想恢复自定义品牌：把下面两行取消注释即可（HubBrandMark / HubBrandName 仍在文件里）。
+        // mount('sidebar.brand.mark', { priority: -1 }, HubBrandMark);
+        // mount('sidebar.brand.name', { priority: -1 }, HubBrandName);
         // 群聊：全屏 overlay 页面，不再挂在每个 agent 的会话视图里
 // ── 群聊布局自诊断（2026-11-09，顶层轮询）──────────────────────────────
 // 挂在这里而不是 HubRoomPage 里：那个组件返回 null 时不渲染，若 slot 采用条件挂载，
