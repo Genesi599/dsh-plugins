@@ -134,6 +134,21 @@ window.__ModuleLoader__.load({
     }
 
     /**
+     * 任务线排序：最近活跃的排最前；活跃时间相同按 tasks.json 定义顺序兜底。
+     *
+     * 为什么单独抽出来：排序规则要能被测试直接跑（test/lane-order.test.mjs 切片真源码），
+     * 也避免把「显示顺序」的逻辑散在 JSX 里。纯函数——不改入参、不读全局。
+     *
+     * @param {Array<{task: object, index: number, lastAt: number}>} entries
+     *   index = 该线在 tasks.json 里的位置（顺序兜底用）；lastAt = 该线最近活跃时间(ms)。
+     */
+    function orderLanesByActivity(entries) {
+      return entries.slice().sort(
+        (a, b) => ((Number(b.lastAt) || 0) - (Number(a.lastAt) || 0)) || (a.index - b.index),
+      );
+    }
+
+    /**
      * 极简 Markdown → React 元素（不引第三方库，够黑板用）：
      * 标题 #~####、无序列表 -/*、行内 **粗体** 与 `代码`、其余按段落。
      */
@@ -675,9 +690,15 @@ window.__ModuleLoader__.load({
 .pr-lane-msg {
   -webkit-line-clamp: unset;
   display: block;
-  overflow: hidden;
+  overflow: visible;
   flex: 0 0 auto;
-  white-space: nowrap; text-overflow: ellipsis;
+  /* 2026-11-11 用户令「任务线卡片正文要显示全，不要省略号」：
+     这里原来（aea43437）是 white-space:nowrap + text-overflow:ellipsis + overflow:hidden，
+     每条消息被压成一行、末尾挂「…」。改成按内容换行完整显示；overflow 必须回到 visible，
+     否则又会踩上面那条 2026-11-09 的坑（flex 子项 min-height 解析成 0 → 压扁不滚）。 */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
 }
 .pr-hint { font-size: 11px; color: var(--dsw-alias-label-secondary); padding: 6px 0; }
 .pr-err { font-size: 11.5px; color: #f87171; padding: 4px 0; }
@@ -718,18 +739,24 @@ function summarizeMessage(raw) {
   // 逐行挑第一句有内容的
   const lines = text.split(/\r?\n/);
   const NOISE = /^(#{1,6}\s*|\*\*你问的\*\*|\*\*答\*\*|\*\*本轮结果\*\*|你问的|答[：:]|本轮结果[：:]|[-*+]\s+|\d+[.、]\s*)/;
+  /* 前导符号噪音（2026-11-11）：模型经常先吐一个 "." 再吐正文，实测 assistant/message 原文形如
+     ".## 做完了：…" → 老规则只认行首 # 号，被这个 "." 挡住后整行"##"原样进卡片。
+     这里只剥**符号**（不含数字/文字），并按叠加情况剥到不动为止。 */
+  const LEAD_SYMBOL = /^[.。，,、;；:：·•…\-*+#>]+\s*/;
+  /* 有可见字符才算有内容：纯标点/纯符号（"."、"..."、"…"、"——"）在卡片里只会渲染成一条
+     没有文字的灰条，6 条连着看起来就是"骨架屏加载中"（2026-11-11 用户贴图报的就是这个）。 */
+  const VISIBLE = /[\p{L}\p{N}]/u;
   for (const line of lines) {
     let s = line.trim();
     if (!s) continue;
-    s = s.replace(NOISE, '').replace(/\*\*/g, '').trim();
+    s = s.replace(NOISE, '');
+    for (let i = 0; i < 3; i += 1) s = s.replace(LEAD_SYMBOL, '');
+    s = s.replace(/\*\*/g, '').trim();
     if (!s || s.length < 4) continue;
-    // 单行压平 + 控制长度（超过 80 字在第二句边界断开）
+    if (!VISIBLE.test(s)) continue;
+    // 单行压平（2026-11-11 用户令「任务线卡片正文要显示全，不要省略号」：
+    // 原「超 80 字按句读断开、断不了就截 78 字 + …」已删——存进卡片的就是完整一句正文）。
     s = s.replace(/\s+/g, ' ').trim();
-    if (s.length > 80) {
-      const cut = s.slice(0, 80);
-      const at = Math.max(cut.lastIndexOf('。'), cut.lastIndexOf('；'), cut.lastIndexOf('，'));
-      s = (at > 40 ? cut.slice(0, at + 1) : `${cut.slice(0, 78)}…`).trim();
-    }
     return s;
   }
   return '';
@@ -1851,9 +1878,11 @@ function summarizeMessage(raw) {
             ? (roomBus.sessionIndex.get(project) || [])
             : [];
           const sessionOf = (name) => list.find((m) => m.name === name);
+          // 加载**全部** active 线（不截断）：渲染阶段要按「最近活跃」重排后再取前 8 列。
+          // 加载时就截 8，会让 tasks.json 里第 9 条以后的线永远拿不到 lastAt、永远排不上来
+          //（2026-11-11 用户令「最近活跃的任务线排最前」）。
           const activeTasks = (tasks && Array.isArray(tasks.tasks) ? tasks.tasks : [])
-            .filter((task) => String(task.status || '').toLowerCase() !== 'archived')
-            .slice(0, 8);
+            .filter((task) => String(task.status || '').toLowerCase() !== 'archived');
           const next = {};
           // ⚠️ 跨列去重：同一个成员可能属于多条任务线（实测 DSH工程师 同时在
           // quota-panel / t2 / plugin-publish 三条 active 线里），若每条线各自聚合他的会话，
@@ -1901,6 +1930,11 @@ function summarizeMessage(raw) {
                 // 卡片是进度视图，只放一句摘要要点。
                 // 卡片只渲染这句要点——不保留原文副本（2026-11-10 分诊定调：存与渲染两端都只留摘要）。
                 const summary = summarizeMessage(value);
+                // 空摘要（内容只有 "." / 纯代码块 / 纯表格）**不进卡片**（2026-11-11）：
+                // 老逻辑照样 push，渲染成一条没有文字的 .pr-lane-msg 空灰条；当最近 6 条恰好都是
+                // 这种「模型只吐一个点」的消息时，卡片正文 = 6 条等高灰条，用户看到的就是"骨架屏加载中"。
+                // 跳过之后 slice(-6) 自然落到真正有内容的最近 6 条；一条都不剩时渲染「暂无消息」提示。
+                if (!summary) continue;
                   collected.push({
                     seq: event.seq,
                     time: event.time || 0,
@@ -1913,7 +1947,14 @@ function summarizeMessage(raw) {
               } catch { /* 单个成员失败不影响整列 */ }
             }
             collected.sort((a, b) => (a.time || 0) - (b.time || 0));
-            next[key] = { messages: collected.slice(-6) };
+            // 这条线的「最近活跃时间」= max(卡片里最后一条消息时间, 该线成员会话的最近活跃)。
+            // 只用 collected 会漏掉「刚发过话但没进卡片」的线（摘要为空被跳过、共享成员被跨列
+            // 去重、只取最后 6 条），那排序就退回 tasks.json 顺序——正是用户报的「没按活跃排」。
+            const lastAt = targets.reduce(
+              (acc, member) => Math.max(acc, lastActiveOf(member.id) || 0),
+              collected.length ? (collected[collected.length - 1].time || 0) : 0,
+            );
+            next[key] = { messages: collected.slice(-6), lastAt };
           }
           if (!cancelled) setLanes(next);
         };
@@ -1994,10 +2035,21 @@ function summarizeMessage(raw) {
         } finally { setBusy(false); }
       };
 
-      // 活跃任务线（按任务分列用；archived 的不显示，最多 8 列）
-      const activeTasks = (tasks && Array.isArray(tasks.tasks) ? tasks.tasks : [])
-        .filter((task) => String(task.status || '').toLowerCase() !== 'archived')
-        .slice(0, 8);
+      // 活跃任务线（按任务分列用；archived 的不显示，最多 8 列）。
+      // 排序（2026-11-11 用户令「任务线排序要按活跃时间排，把最近活跃的任务线排在最前面」）：
+      // 按每条线的 lastAt 降序，活跃时间相同按 tasks.json 定义顺序兜底；
+      // **排序之后再截 8 列**——否则最近活跃但排在 tasks.json 第 9 位的线永远看不到。
+      // 只影响显示顺序，不改 tasks.json、不影响归线、不影响归档。
+      const activeTaskEntries = orderLanesByActivity(
+        (tasks && Array.isArray(tasks.tasks) ? tasks.tasks : [])
+          .filter((task) => String(task.status || '').toLowerCase() !== 'archived')
+          .map((task, index) => ({
+            task,
+            index,
+            lastAt: (lanes[task.id || `task-${index}`] || {}).lastAt || 0,
+          })),
+      ).slice(0, 8);
+      const activeTasks = activeTaskEntries.map((entry) => entry.task);
       const activeTaskCount = activeTasks.length;
       // 一页展示三段（看板 / 任务 / 待办），不再用 tab 切换（用户要求整合到一页）
       const body = h('div', { className: 'pr-room-body' },
@@ -2034,8 +2086,10 @@ function summarizeMessage(raw) {
           activeTaskCount === 0
             ? h('div', { className: 'pr-hint' }, '这个项目当前没有活跃任务线（tasks.json 里 status 均为 archived）。')
             : h('div', { className: 'pr-lanes' },
-              activeTasks.map((task, taskIndex) => {
-                const key = task.id || `task-${taskIndex}`;
+              activeTaskEntries.map((entry) => {
+                const task = entry.task;
+                // key 必须按 tasks.json 里的**原始位置**取：排序后下标会漂，任务线卡片会串内容
+                const key = task.id || `task-${entry.index}`;
                 const lane = lanes[key] || {};
                 const state = String(task.status || '').toLowerCase();
                 const tone = state.includes('block') ? 'var(--dsw-alias-state-warning-primary, #c9a227)' : 'var(--dsw-alias-brand-primary)';
@@ -2130,7 +2184,8 @@ function summarizeMessage(raw) {
     return {
       inject: ['slots'],
       // 测试钩子：让 smoke.mjs 能直接驱动房间页渲染（生产运行不读）
-      __test: { roomBus, conversationBox },
+      // summarizeMessage 一并暴露：卡片摘要的「空摘要→灰条」回归要能直接断言（2026-11-11）。
+      __test: { roomBus, conversationBox, summarizeMessage },
       apply(ctx) {
         clientCtx = ctx;
         // ⚠️ 必须先注入样式表再注册组件：这里曾经漏调 ensureStyle()，

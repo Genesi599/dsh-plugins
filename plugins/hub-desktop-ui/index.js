@@ -27,6 +27,8 @@ import {
   RESUME_MAX_PER_BOOT,
   ARCHIVE_MIN_AGE_MS,
   applyTaskStatusMutation,
+  syncBoardLanes,
+  patchLaneInBoard,
   shouldSkipResumeByLedger,
   looksTaskSpecificName,
   deliveryConclusion,
@@ -2431,6 +2433,9 @@ export function apply(ctx, config = {}) {
           const url = new URL(req.url || '/', 'http://127.0.0.1');
           const root = hostRoot(hub);
           const project = url.searchParams.get('project') || '';
+          // 2026-11-11 用户令：公共看板是唯一真源 → 读任务线前先把 board.md 的
+          // 「## 任务线」段投影成 tasks.json（看板没有该段时原样不动，向后兼容）。
+          try { syncBoardLanes(project, root); } catch (error) { /* 投影失败不挡读 */ }
           const file = readTaskFile(project, root);
           const parsed = file && file.ok ? file.tasks : {};
           // 2026-10-26 自愈防御：/hub/tasks 读前对账（被清空的非 _none 条目自动补回 + 告警）
@@ -3682,6 +3687,22 @@ export function apply(ctx, config = {}) {
           }
           const path = boardPath(project, hostRoot(hub));
           if (!path) return reply({ ok: false, error: 'invalid project' });
+          // 2026-11-11 用户令（A 直接回写）：有「## 任务线」段时改看板、再投影；
+          // 没有该段（旧项目）则保持原来的直接改 tasks.json。
+          const boardPatched = patchLaneInBoard(project, hostRoot(hub), { taskId, status, goalState, autoArchiveRounds: body.autoArchiveRounds });
+          if (boardPatched.handled) {
+            const file0 = join(dirname(path), 'tasks.json');
+            const data0 = (() => { try { return JSON.parse(readFileSync(file0, 'utf8')); } catch (error) { return {}; } })();
+            return reply({
+              ok: boardPatched.changed !== false,
+              taskId,
+              ...(status ? { status } : {}),
+              ...(goalState ? { goalState } : {}),
+              round: Number(data0.round) || 0,
+              source: 'board',
+              ...(boardPatched.error ? { error: boardPatched.error } : {}),
+            });
+          }
           const file = join(dirname(path), 'tasks.json');
           const data = JSON.parse(readFileSync(file, 'utf8'));
           // 2026-11-11 用户令：闲置任务线自动归档，事件驱动（不轮询）。
