@@ -139,8 +139,12 @@ window.__ModuleLoader__.load({
   border-radius: 10px !important;
 }
 
-/* 新会话按钮：38px -> 32px，跟随更窄的列 */
-[data-slot="sidebar"] [class*="_newSession"] { min-height: 32px !important; }
+/* 侧栏顶部的「New Session」胶囊按钮（2026-11-11 用户问「这个能隐藏吗」）→ 隐藏。
+   出厂结构：<button type="button" class="<hash>_newSession" aria-label="New session">，
+   <hash> 随构建变、后缀 _newSession 稳定 → 按子串匹配。
+   带 button 标签限定，避免连带命中 _newSessionLabel / _newSessionContent 等内部节点。
+   折叠成 48px 图标轨时该按钮同样隐藏（外壳会把 fixed 定位到 titlebar 里，display:none 一并覆盖）。 */
+[data-slot="sidebar"] button[class*="_newSession"] { display: none !important; }
 
 /* 侧栏缩放（2026-10-25 用户要求「侧边栏网页要能缩放」）：Ctrl+滚轮调
    --hub-sidebar-zoom（0.7–1.8），整列 zoom 缩放、宽度随轨道自适应；
