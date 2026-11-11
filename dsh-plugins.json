@@ -1,17 +1,17 @@
 {
-  "exportedAt": "2026-11-11T16:10:07.006Z",
+  "exportedAt": "2026-11-11T16:20:22.519Z",
   "plugins": [
     {
       "dir": "hub-desktop-ui",
       "name": "dsh-hub-desktop-ui",
-      "version": "0.2.14",
+      "version": "0.2.15",
       "description": "AI-Agent-Hub 的 DSH 前端形态插件：紧凑会话侧栏、侧栏底部状态卡与项目/任务线视图。",
       "files": 12
     },
     {
       "dir": "project-room",
       "name": "dsh-project-room",
-      "version": "0.2.4",
+      "version": "0.2.5",
       "description": "Project rooms for DeepSeek Harness: group sessions into projects, see per-project runtime, and open a room with a shared board, task list, todo queue and message delivery to member sessions.",
       "files": 8
     },

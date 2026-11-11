@@ -1789,6 +1789,9 @@ function summarizeMessage(raw) {
       const [boardDirty, setBoardDirty] = React.useState(false);
       const [boardEditing, setBoardEditing] = React.useState(false);
       const [tasks, setTasks] = React.useState(null);
+      // 2026-11-12：任务线不绑成员 → 卡片消息按 routing（eventId → 线 id）归线。
+      // /hub/tasks 的 routing 是顶层字段，setTasks 只存 tasks 数组，所以单独存一份。
+      const [routingMap, setRoutingMap] = React.useState({});
       const [archiving, setArchiving] = React.useState(null);   // { taskId, armed } 两段式确认
       const [taskTick, setTaskTick] = React.useState(0);        // 加一即重拉 tasks.json
       const [members, setMembers] = React.useState([]);
@@ -1829,6 +1832,7 @@ function summarizeMessage(raw) {
             if (cancelled) return;
             setBoard((b && b.board) || '');
             setTasks(t && t.tasks);
+            setRoutingMap((t && t.routing && typeof t.routing === 'object') ? t.routing : {});
           } catch (err) {
             if (!cancelled) setError(`读取房间失败：${String(err && err.message || err)}`);
           }
@@ -1881,79 +1885,103 @@ function summarizeMessage(raw) {
           // 加载**全部** active 线（不截断）：渲染阶段要按「最近活跃」重排后再取前 8 列。
           // 加载时就截 8，会让 tasks.json 里第 9 条以后的线永远拿不到 lastAt、永远排不上来
           //（2026-11-11 用户令「最近活跃的任务线排最前」）。
-          const activeTasks = (tasks && Array.isArray(tasks.tasks) ? tasks.tasks : [])
+          const taskList = Array.isArray(tasks) ? tasks
+            : (tasks && Array.isArray(tasks.tasks) ? tasks.tasks : []);
+          const activeTasks = taskList
             .filter((task) => String(task.status || '').toLowerCase() !== 'archived');
           const next = {};
-          // ⚠️ 跨列去重：同一个成员可能属于多条任务线（实测 DSH工程师 同时在
-          // quota-panel / t2 / plugin-publish 三条 active 线里），若每条线各自聚合他的会话，
-          // 他的消息就会在每一列重复出现——用户两次反馈的「重复显示」就是这个。
-          // 规则：独占成员的消息归它唯一所属的线；共享成员的消息只归「第一条」包含它的线
-          // （按 tasks 数组顺序），其余线不再重复显示。
-          const sharedSeen = new Set();          // sessionId:seq 已分配
-          const memberCount = new Map();          // 成员名 → 出现在几条线
-          for (const task of activeTasks) {
-            for (const name of (Array.isArray(task.members) ? task.members : [])) {
-              memberCount.set(name, (memberCount.get(name) || 0) + 1);
+          // 2026-11-12 用户令「任务线不用绑定成员，以任务目标为标准」：
+          // 卡片消息**只按 routing.json 归线**（eventId → 任务线 id），不再按成员会话聚合。
+          // 每个 agent 处理消息时自己判断它属于哪条线（写 routing），这里只负责按归属渲染。
+          // 旧实现按 task.members 找会话、再做「共享成员跨列去重」——成员不再绑定后那条路必然全空，
+          // 于是卡片只剩一行空态提示。整段已换成 routing 驱动。
+          const routing = routingMap && typeof routingMap === 'object' ? routingMap : {};
+          const laneKeys = new Set(activeTasks.map((task, index) => String(task.id || `task-${index}`)));
+          const laneOfEvent = (event, sessionId) => {
+            if (!event) return '';
+            const rawKey = routing[event.id] !== undefined
+              ? routing[event.id]
+              : routing[`${sessionId}:${event.seq}`];
+            const key = rawKey === undefined || rawKey === null ? '' : String(rawKey);
+            if (!key || key === '_none' || key === '_hidden') return '';
+            return laneKeys.has(key) ? key : '';
+          };
+          const buckets = new Map();
+          for (const key of laneKeys) buckets.set(key, []);
+          for (const session of list) {
+            try {
+              const res = await fetch(`/hub/session-events?session=${encodeURIComponent(session.id)}&limit=60`);
+              const data = await res.json();
+              const events = Array.isArray(data && data.events) ? data.events : [];
+              for (const event of events) {
+                if (!event || (event.type !== 'user/message' && event.type !== 'assistant/message')) continue;
+                const laneKey = laneOfEvent(event, session.id);
+                if (!laneKey) continue;
+                const content = event.data && event.data.message && event.data.message.content;
+                const text = Array.isArray(content)
+                  ? content.filter((part) => part && part.type === 'text').map((part) => part.text || '').join('\n')
+                  : '';
+                const value = String(text || '').trim();
+                if (!value) continue;
+                // 卡片是进度视图，只放一句摘要要点（2026-11-10 分诊定调）。
+                const summary = summarizeMessage(value);
+                // 空摘要（内容只有 "." / 纯代码块 / 纯表格）不进卡片（2026-11-11 修骨架屏）。
+                if (!summary) continue;
+                buckets.get(laneKey).push({
+                  seq: event.seq,
+                  time: event.time || 0,
+                  role: event.type === 'user/message' ? 'user' : 'agent',
+                  from: session.name,
+                  text: summary,
+                });
+              }
+            } catch { /* 单个会话失败不影响整列 */ }
+          }
+          // 过渡期兼容：老项目 tasks.json 里还写着 members、又完全没有 routing 记录时，
+          // 退回按成员会话收集（新模型只走 routing，这条只在「老数据还没迁」时生效）。
+          if (Object.keys(routing).length === 0) {
+            // 跨线去重：共享成员的消息只归「第一条」包含它的线（保持旧行为，避免同一条消息
+            // 在每条含该成员的线里重复出现）。
+            const claimedMembers = new Set();
+            for (const [index, task] of activeTasks.entries()) {
+              const key = String(task.id || `task-${index}`);
+              if ((buckets.get(key) || []).length > 0) continue;
+              const names = Array.isArray(task.members) ? task.members : [];
+              for (const name of names) {
+                const member = sessionOf(name);
+                if (!member) continue;
+                if (claimedMembers.has(member.id)) continue;
+                claimedMembers.add(member.id);
+                try {
+                  const res = await fetch(`/hub/session-events?session=${encodeURIComponent(member.id)}&limit=60`);
+                  const data = await res.json();
+                  const events = Array.isArray(data && data.events) ? data.events : [];
+                  for (const event of events) {
+                    if (!event || (event.type !== 'user/message' && event.type !== 'assistant/message')) continue;
+                    const content = event.data && event.data.message && event.data.message.content;
+                    const text = Array.isArray(content)
+                      ? content.filter((part) => part && part.type === 'text').map((part) => part.text || '').join('\n')
+                      : '';
+                    const value = String(text || '').trim();
+                    if (!value) continue;
+                    const summary = summarizeMessage(value);
+                    if (!summary) continue;
+                    buckets.get(key).push({
+                      seq: event.seq, time: event.time || 0,
+                      role: event.type === 'user/message' ? 'user' : 'agent',
+                      from: member.name, text: summary,
+                    });
+                  }
+                } catch { /* 单个成员失败不影响整列 */ }
+              }
             }
           }
-          // 串行处理（先到先得需要确定顺序）
           for (const [index, task] of activeTasks.entries()) {
-            const key = task.id || `task-${index}`;
-            const names = Array.isArray(task.members) ? task.members : [];
-            const targets = names.map((name) => sessionOf(name)).filter(Boolean);
-            if (targets.length === 0) {
-              next[key] = { messages: [], note: '这条线没有可用的成员会话' };
-              continue;
-            }
-            const collected = [];
-            for (const member of targets) {
-              // 共享成员：如果它已经被前面的线拿走了，这一列不再显示它的消息
-              const claimedKey = `member:${member.id}`;
-              const isShared = (memberCount.get(member.name) || 0) > 1;
-              if (isShared && sharedSeen.has(claimedKey)) continue;
-              try {
-                const res = await fetch(`/hub/session-events?session=${encodeURIComponent(member.id)}&limit=60`);
-                const data = await res.json();
-                const events = Array.isArray(data && data.events) ? data.events : [];
-                for (const event of events) {
-                  if (!event || (event.type !== 'user/message' && event.type !== 'assistant/message')) continue;
-                  const content = event.data && event.data.message && event.data.message.content;
-                  const text = Array.isArray(content)
-                    ? content.filter((part) => part && part.type === 'text').map((part) => part.text || '').join('\n')
-                    : '';
-                  const value = String(text || '').trim();
-                  if (!value) continue;
-                  const msgKey = `${member.id}:${event.seq}`;
-                  if (sharedSeen.has(msgKey)) continue;
-                  sharedSeen.add(msgKey);
-                // 2026-11-10 用户报「群聊卡片把整段会话原文当消息渲染」：
-                // 卡片是进度视图，只放一句摘要要点。
-                // 卡片只渲染这句要点——不保留原文副本（2026-11-10 分诊定调：存与渲染两端都只留摘要）。
-                const summary = summarizeMessage(value);
-                // 空摘要（内容只有 "." / 纯代码块 / 纯表格）**不进卡片**（2026-11-11）：
-                // 老逻辑照样 push，渲染成一条没有文字的 .pr-lane-msg 空灰条；当最近 6 条恰好都是
-                // 这种「模型只吐一个点」的消息时，卡片正文 = 6 条等高灰条，用户看到的就是"骨架屏加载中"。
-                // 跳过之后 slice(-6) 自然落到真正有内容的最近 6 条；一条都不剩时渲染「暂无消息」提示。
-                if (!summary) continue;
-                  collected.push({
-                    seq: event.seq,
-                    time: event.time || 0,
-                    role: event.type === 'user/message' ? 'user' : 'agent',
-                    from: member.name,
-                    text: summary,
-                  });
-                }
-                if (isShared) sharedSeen.add(claimedKey);
-              } catch { /* 单个成员失败不影响整列 */ }
-            }
-            collected.sort((a, b) => (a.time || 0) - (b.time || 0));
-            // 这条线的「最近活跃时间」= max(卡片里最后一条消息时间, 该线成员会话的最近活跃)。
-            // 只用 collected 会漏掉「刚发过话但没进卡片」的线（摘要为空被跳过、共享成员被跨列
-            // 去重、只取最后 6 条），那排序就退回 tasks.json 顺序——正是用户报的「没按活跃排」。
-            const lastAt = targets.reduce(
-              (acc, member) => Math.max(acc, lastActiveOf(member.id) || 0),
-              collected.length ? (collected[collected.length - 1].time || 0) : 0,
-            );
+            const key = String(task.id || `task-${index}`);
+            const collected = (buckets.get(key) || []).slice()
+              .sort((a, b) => (a.time || 0) - (b.time || 0));
+            // 最近活跃时间 = 该线已归线消息里最大时间；空线记 0（排在最后）。
+            const lastAt = collected.length ? (collected[collected.length - 1].time || 0) : 0;
             next[key] = { messages: collected.slice(-6), lastAt };
           }
           if (!cancelled) setLanes(next);
@@ -1961,7 +1989,7 @@ function summarizeMessage(raw) {
         load();
         const timer = setInterval(load, 30000);
         return () => { cancelled = true; clearInterval(timer); };
-      }, [project, tasks]);
+      }, [project, tasks, routingMap]);
 
       if (!project) return null;
 
@@ -2113,7 +2141,10 @@ function summarizeMessage(raw) {
                       },
                     }, archiving && archiving.taskId === key && archiving.armed ? '确认归档?' : '⋯'),
                   ),
-                  h('div', { className: 'pr-lane-sub' }, (task.members || []).join('、') || '无成员'),
+                  // 2026-11-12：任务线不绑成员 → 没有成员行就不渲染，不再显示「无成员」
+                  ((task.members || []).length
+                    ? h('div', { className: 'pr-lane-sub' }, (task.members || []).join('、'))
+                    : null),
                   h('div', { className: 'pr-lane-body' },
                     lane.note
                       ? h('div', { className: 'pr-hint' }, lane.note)

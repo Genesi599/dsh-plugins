@@ -1,6 +1,6 @@
 {
   "name": "dsh-project-room",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "type": "module",
   "description": "Project rooms for DeepSeek Harness: group sessions into projects, see per-project runtime, and open a room with a shared board, task list, todo queue and message delivery to member sessions.",
   "main": "index.js",
