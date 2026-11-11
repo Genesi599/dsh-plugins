@@ -17,6 +17,12 @@ window.__ModuleLoader__.load({
 
     /** 主题层标识（一个 source 一层；重复调用只替换该层）。 */
     const THEME_SOURCE = 'ai-agent-hub/hub-desktop-ui';
+    /**
+     * 是否覆盖 DSH 的主题配色。2026-11-11 用户令「暖色暗调配色可以不调吗？用默认的不行吗」→ 默认 false，
+     * 即使用 DSH 自带配色；把这里改成 true 就恢复下面的暖色暗调 token。
+     * 注意：关掉只影响配色，布局/侧栏/项目页/状态卡等功能不受影响。
+     */
+    const USE_CUSTOM_PALETTE = false;
     /** 形态样式层的 style 元素 id（便于核对与清理）。 */
     const SKIN_STYLE_ID = 'hub-dsh-skin';
 
@@ -7721,7 +7727,9 @@ function HubWorkspaces(props) {
         });
 
         // ① 主题层：暖中性暗调 + 陶土色主色（对齐 Hermes 桌面的低饱和观感）
-        ctx.effect(() => ctx.theme.overrideTokens(THEME_SOURCE, THEME_TOKENS));
+        // 2026-11-11 用户令：默认不覆盖 DSH 配色（USE_CUSTOM_PALETTE=false）→ 用 DSH 自带主题。
+        // 想恢复暖色暗调：把文件顶部的 USE_CUSTOM_PALETTE 改成 true。
+        if (USE_CUSTOM_PALETTE) ctx.effect(() => ctx.theme.overrideTokens(THEME_SOURCE, THEME_TOKENS));
 
         // ② 形态样式层：注入 style，卸载时移除
         ctx.effect(() => {
