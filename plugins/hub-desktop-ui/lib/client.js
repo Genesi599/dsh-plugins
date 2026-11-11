@@ -222,7 +222,8 @@ html[data-hub-room] .hub-rate-hint {
   display: none !important;
 }
 
-/* 出厂「New Session」按钮 → 视觉上改成「New project」（点击被插件拦截为新建项目） */
+/* 2026-11-11 用户令「可以不覆盖吗」：恢复 DSH 出厂的「New Session」按钮，
+   下面这段把按钮文字改成「New project」的 CSS 已停用（取消注释即恢复）。
 [data-slot="sidebar"] button[class*="_newSession"] * {
   font-size: 0 !important;
 }
@@ -240,6 +241,7 @@ html[data-hub-room] .hub-rate-hint {
 [data-slot="sidebar"] [class*="_newSession"] svg {
   font-size: 13px;
 }
+*/
 
 /* ── 分身分列（历史特性，2026-11-09 用户令已取消，CloneColumns 不再挂载） ─────────
    下面 [data-hub-clone-cols] 的两条规则原本是「挂上面板时藏掉原生消息区与原生 composer」。
@@ -9458,7 +9460,9 @@ ctx.effect(() => {
         // （会接管搜索/拖拽/右键菜单这些出厂能力，本版先做只读浏览 + 开会话）。
         mount('sidebar.workspaces', { priority: -1 }, HubWorkspaces);
 
-        // 「New Session」出厂按钮 → 拦下来改成「New project」弹窗
+        // 2026-11-11 用户令「可以不覆盖吗」：不再拦截出厂的「New Session」按钮，恢复它原本行为。
+        // 「New project」弹窗组件仍挂在 overlay 上（NewProjectDialog 自己渲染 null），
+        // 需要恢复拦截时把下面 ctx.effect 那段取消注释即可。
         mount('shell.overlay', { id: 'hub-new-project', order: 100 }, NewProjectDialog);
         // 顺序镜像心跳（2026-11-11）：挂 overlay 而不是 sidebar.workspaces ——
         // 后者被 project-room 的 ProjectSidebar（priority -2）顶掉，挂在那儿的组件不渲染，
@@ -9468,19 +9472,19 @@ ctx.effect(() => {
         mount('shell.overlay', { id: 'hub-order-mirror', order: 200 }, OrderMirrorHeartbeat);
         // 实时速率：跟在「Deep diving for Ns ···」那一行后面（同排小字，不另起一行）
         mount('conversation.input.dock', { id: 'hub-live-rate', order: 50 }, LiveRateHint);
-        ctx.effect(() => {
-          const intercept = (event) => {
-            const target = event.target;
-            if (!target || typeof target.closest !== 'function') return;
-            const button = target.closest('[data-slot="sidebar"] [class*="_newSession"]');
-            if (!button) return;
-            event.preventDefault();
-            event.stopPropagation();
-            openNewProject();
-          };
-          document.addEventListener('click', intercept, true);
-          return () => document.removeEventListener('click', intercept, true);
-        }, 'hub-desktop-ui: new project intercept');
+        // ctx.effect(() => {
+        //   const intercept = (event) => {
+        //     const target = event.target;
+        //     if (!target || typeof target.closest !== 'function') return;
+        //     const button = target.closest('[data-slot="sidebar"] [class*="_newSession"]');
+        //     if (!button) return;
+        //     event.preventDefault();
+        //     event.stopPropagation();
+        //     openNewProject();
+        //   };
+        //   document.addEventListener('click', intercept, true);
+        //   return () => document.removeEventListener('click', intercept, true);
+        // }, 'hub-desktop-ui: new project intercept');
       },
     };
   },
