@@ -1144,6 +1144,31 @@ function loadRunbarUnread() {
     }
     /* RUNBAR-PURE-END */
 
+    // 任务线显示排序（2026-11-12 用户令「编辑的时候把当前编辑的任务线移到第一个」）。
+    // 纯函数、不碰 window/DOM：输入线定义数组 + 正在编辑的线 key + 取活跃时间的函数，
+    // 输出**新的**排序后数组（不就地改入参）。
+    // 判据顺序：① 正在编辑 / 刚编辑过的那条线永远第一；② 其余按最近活动时间降序；
+    // ③ 活跃时间相同（或都没时间）按传入顺序（tasks.json 定义顺序）兜底。
+    // 只影响显示顺序：不改 tasks.json、不写 routing、不影响归线结果与归档区。
+    // LANE-ORDER-PURE-START
+    function orderLanesForDisplay(lanes, options = {}) {
+      const list = Array.isArray(lanes) ? lanes : [];
+      const pinnedKey = options.pinnedKey === undefined || options.pinnedKey === null
+        ? '' : String(options.pinnedKey);
+      const activityOf = typeof options.activityOf === 'function' ? options.activityOf : () => 0;
+      return list.slice().sort((a, b) => {
+        if (pinnedKey) {
+          const aPinned = String(a && a.key) === pinnedKey;
+          const bPinned = String(b && b.key) === pinnedKey;
+          if (aPinned !== bPinned) return aPinned ? -1 : 1;
+        }
+        const delta = (Number(activityOf(b)) || 0) - (Number(activityOf(a)) || 0);
+        if (delta !== 0) return delta;
+        return list.indexOf(a) - list.indexOf(b);
+      });
+    }
+    /* LANE-ORDER-PURE-END */
+
     /** 房间待办队列（按项目存 localStorage）。 */
     function loadRoomTodos(project) {
       try {
@@ -5461,6 +5486,9 @@ function HubWorkspaces(props) {
       const [roomDraft, setRoomDraft] = React.useState('');
       // 任务线手动归档/改状态（2026-10-25 用户要求）：⋯ 菜单 + 改完立即重拉元数据
       const [laneMenu, setLaneMenu] = React.useState(null); // { key, title, x, y }
+      // 正在编辑 / 刚编辑过的那条任务线（2026-11-12 用户令）：排序时排到第一位，
+      // 这样点开 ⋯ 改状态这条线时它就在最左边，不会因为活跃时间靠后而藏在横向滚动里。
+      const [editedLaneKey, setEditedLaneKey] = React.useState('');
       const [metaTick, setMetaTick] = React.useState(0);
       const [roomBusy, setRoomBusy] = React.useState(false);
       const [roomTarget, setRoomTarget] = React.useState('');
@@ -6270,6 +6298,8 @@ function HubWorkspaces(props) {
               onClick: (event) => {
                 event.stopPropagation();
                 const rect = event.currentTarget.getBoundingClientRect();
+                // 2026-11-12 用户令：编辑哪条线，哪条线就排到列表第一位
+                setEditedLaneKey(String(lane.key));
                 setLaneMenu({
                   key: String(lane.key),
                   title: taskTitle,
@@ -6505,18 +6535,17 @@ function HubWorkspaces(props) {
         const at = Number(item.time) || 0;
         if (at > (laneLastActivity.get(laneKey) || 0)) laneLastActivity.set(laneKey, at);
       }
-      const activeLanes = laneDefs
-        .filter((lane) => lane.status !== 'archived'
-          && ((laneItemCount.get(lane.key) || 0) > 0 || routingBackedLanes.has(lane.key)))
-        // 排序：最近有活动的线排最前；时间相同按 tasks.json 定义顺序（laneDefs 顺序稳定）兜底。
-        // 只影响显示顺序，不改 tasks.json、不影响归线、不影响归档区。
-        .sort((a, b) => {
-          const delta = (laneLastActivity.get(b.key) || 0) - (laneLastActivity.get(a.key) || 0);
-          if (delta !== 0) return delta;
-          const ai = laneDefs.indexOf(a);
-          const bi = laneDefs.indexOf(b);
-          return ai - bi;
-        });
+      const activeLanes = orderLanesForDisplay(
+        laneDefs.filter((lane) => lane.status !== 'archived'
+          && ((laneItemCount.get(lane.key) || 0) > 0 || routingBackedLanes.has(lane.key))),
+        {
+          // 编辑中的那条线钉在最前（editedLaneKey 由 ⋯ 菜单设/换）；其余按最近活动时间降序，
+          // 时间相同按 tasks.json 定义顺序（laneDefs 顺序稳定）兜底。
+          // 只影响显示顺序，不改 tasks.json、不影响归线、不影响归档区。
+          pinnedKey: editedLaneKey,
+          activityOf: (lane) => laneLastActivity.get(lane.key) || 0,
+        },
+      );
       const archivedLanes = laneDefs.filter((lane) => lane.status === 'archived');
       const lanes = activeLanes.map(renderLane);
 
@@ -6571,6 +6600,8 @@ function HubWorkspaces(props) {
             onClick: (event) => {
               event.stopPropagation();
               setLaneMenu(null);
+              // 改完状态这条线仍是「刚编辑过」→ 继续排第一位
+              setEditedLaneKey(String(laneMenu.key));
               patchTaskLine(laneMenu.key, { goalState });
             },
           }, label)),
@@ -7017,6 +7048,9 @@ function HubWorkspaces(props) {
       }, []);
       // 2026-10-26：90s 防抖命中时的可见反馈
       const [debounced, setDebounced] = React.useState(false);
+      // 2026-11-12：重启真要 10~20 秒（关旧实例 + 等单实例锁 + 新窗口起来），
+      // 期间窗口全没了，用户容易以为失败又去手点；给「正在重启…」即时反馈。
+      const [restarting, setRestarting] = React.useState(false);
       const [modelOptions, setModelOptions] = React.useState([]);
       const [modelValue, setModelValue] = React.useState('');
       const [modelOpen, setModelOpen] = React.useState(false);
@@ -7177,6 +7211,7 @@ function HubWorkspaces(props) {
             .then(async (res) => {
               if (!res.ok) { setFailed(true); return; }
               const body = await res.text();
+              if (body === 'restarting') setRestarting(true);
               if (body === 'debounced') {
                 setDebounced(true);
                 if (timer.current) clearTimeout(timer.current);
@@ -7530,7 +7565,7 @@ function HubWorkspaces(props) {
               color: (armed || failed) ? 'var(--dsw-alias-state-error-primary)' : 'var(--dsw-alias-label-secondary)',
               cursor: 'pointer', fontSize: '9.5px',
             },
-          }, recording ? '录制中…' : (failed ? '重启失败' : debounced ? '90秒内已重启' : armed ? '确认重启' : '重启')),
+          }, recording ? '录制中…' : (failed ? '重启失败' : restarting ? '正在重启…' : debounced ? '刚重启过，稍后再试' : armed ? '确认重启' : '重启')),
         ),
         h('div', { style: rowStyle },
           // 余额行（并进本卡）：点开看明细；失败态 hover 给原因

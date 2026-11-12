@@ -39,6 +39,16 @@ DSH 的 markdown 渲染器是 `@deepseek-ai/dsh-client-ui-primitives` 里的 dir
 
 ## 安装
 
+### 整套装（一条命令）
+
+想把 AI-Agent-Hub 这套插件一次装齐（本插件 + 另外 7 个 + 依赖闭包）：
+
+```bash
+npx dsh-hub-suite            # 先看它要改什么：npx dsh-hub-suite --dry-run
+```
+
+需要 Node.js 18+；它会把依赖写进 DSH profile 的 `package.json`、安装依赖，并把包名登记进 `dsh.profile.bundles`。装完重启 DeepSeek Harness。
+
 ```bash
 # 在 DSH 里（推荐）
 plugin_manager install_bundle  target=<此目录的绝对路径>

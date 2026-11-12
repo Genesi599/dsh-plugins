@@ -213,24 +213,24 @@ e. 回用户一句：已派给谁、任务号、准备做什么。**不要在同
 
 - \`归线判据 = 目标\`：这条消息是为了达成哪个目标？和某条任务线的目标一致 → 归它（哪怕跨多个成员、多轮对话）；是新的目标 → 新开一条线。不要因为'都在改客户端'就把所有消息归进同一条线——客户端改造里'修输入框高度'和'加模型切换按钮'就是两个不同的目标；
 - 已有对应任务线 → 把活派给那条线的参与者（或新参与者），**沿用原来的 title**；
-- 是新任务 → 新建一条线（\`taskline_create\` 起会话或直接登记），起名后写进 tasks.json；
+- 是新任务 → 新建一条线（\`taskline_create\` 起会话），起名后**补进 board.md 的 \`## 任务线\` 段**（见下）；
 - 同一件事不要拆成多条线，多件事也不要挤在一条线；同一个成员可以同时属于多条线。
 
-派活时顺手写 .hub/projects/${name}/tasks.json（**新格式**，一条任务一个对象）：
+派活时顺手把线写进 .hub/projects/${name}/board.md 的 \`## 任务线\` 段（2026-11-12 用户令：
+**board.md 是唯一真源，tasks.json 只是它的投影**——直接改 tasks.json 会在下次同步时被覆盖）：
 
-\`\`\`json
-{
-  "tasks": [
-    { "id": "t1", "title": "<8~16 字的任务名>", "status": "active", "members": ["<成员名>", "<成员名>"] }
-  ]
-}
+\`\`\`markdown
+### <8~16 字的任务名>
+- 目标: <达成什么，验收怎么判>
+- 状态: active
+- id: t1
 \`\`\`
 
-- \`title\` 要**精简准确**，例如「定位图细胞器重绘」「群聊看板接入」「待办队列修复」；
+- \`###\` 标题要**精简准确**，例如「定位图细胞器重绘」「群聊看板接入」「待办队列修复」；
 - 不要照抄用户的原话，也不要带「帮我/请/能不能」这类词；
-- \`members\` 写这条线的参与者（按成员名）；也可以写 \`sessionIds\`（按会话 id）；
-- 同一任务线有新阶段时更新 \`title\`（仍是这一条，不要新建对象）；
-- 任务完成后把 \`status\` 改成 "archived"，群聊里它会移进「已归档 N 条任务线」。
+- \`- id:\` **必须写**（沿用该线原来的 id / taskId）：不写就按标题重新生成 slug，routing.json 里归到旧 id 的消息会全部掉线；
+- 同一任务线有新阶段时改 \`- 目标:\` / \`- 状态:\`（仍是这一条，不要新建条目）；
+- 任务完成后把 \`- 状态:\` 改成 \`done\`（归档写 \`archived\`），群聊里归档线会移进「已归档 N 条任务线」。
 
 ## 派活规范（2026-10-28 夜会，五条；2026-11-05 增补第 6、7 条）
 
@@ -262,8 +262,8 @@ e. 回用户一句：已派给谁、任务号、准备做什么。**不要在同
   并在群里说一句「这条线重新打开了」。
 
 写入方式（**任何 agent 都可以做，不必等 Yat2**，分身 / 分诊线一样可以）：
-  - 推荐 \`POST /hub/task-status\`（Host 写盘，顺带记轮次计数）：body = \`{project, taskId, status: "archived"|"active", goalState?}\`；
-  - 也可以直接改 .hub/projects/${name}/tasks.json 里对应对象的 \`status\`。
+  - 推荐 \`POST /hub/task-status\`（Host 先回写 board.md 再投影 tasks.json，顺带记轮次计数）：body = \`{project, taskId, status: "archived"|"active", goalState?}\`；
+  - 也可以直接改 board.md 里那条线的 \`- 状态:\`（**真源**）；直接改 tasks.json 会在下次投影时被覆盖。
 另：闲置任务线会**自动归档**（事件驱动，非轮询）—— 每次改任务线算 1 轮，某条 active 线超过
 \`tasks.json.autoArchiveRounds\`（默认 30）轮没被触及就自动置 archived，字段 \`autoArchivedAtRound\` 记录是第几轮归档的；恢复同样是改回 active 即可。
 客户端「已归档 N 条任务线」可以展开，带「恢复」按钮（改回 active），归档决定谁都能做。
@@ -276,7 +276,7 @@ e. 回用户一句：已派给谁、任务号、准备做什么。**不要在同
 
 
 1. \`taskline_messages {session: "<你的会话>"}\` —— 拿到最新用户消息的 \`eventId\`；
-2. 判定它属于哪条任务线（已有就沿用；新任务就 \`taskline_create\` + 写进 tasks.json）；
+2. 判定它属于哪条任务线（已有就沿用；新任务就 \`taskline_create\`，再把这条线补进 board.md 的 \`## 任务线\` 段并带 \`- id:\`）；
 3. 写 .hub/projects/${name}/routing.json（**任何 agent 都可以写**，累积，不要覆盖已有条目）：
 
 \`\`\`json
@@ -496,6 +496,13 @@ export function memberProtocol(project, role) {
 **细节去哪**：自己那条黑板 section、clone-handoffs/ 归档、commit message、文件本身。任务线只留 ≤5 行摘要。
 
 **Why**：用户明确说「太琐碎」；任务线是进度视图不是报告夹，长文会把重要信息淹掉。
+
+## 任务线怎么改（board.md 是唯一真源，2026-11-12 用户令）
+
+- **真源**：.hub/projects/${project}/board.md 的 \`## 任务线\` 段。每条线 = \`### <线名>\` + \`- 目标:\` + \`- 状态:\`（\`- 结论:\` 可选）。
+- **开工**：先核对自己的活对应的线在不在看板里；不在就补一条（\`- 状态: active\`）。补已有线的字段时**必须带 \`- id: <原 taskId>\`**，否则 id 会按标题重新生成，routing.json 里归到旧 id 的消息会全部掉线。
+- **收工**：把那条线的 \`- 状态:\` 改成 active / done / blocked / archived（完成写 done，别只归档），结论写 \`- 结论:\`。
+- **tasks.json 是投影**：Host 按 board.md 重建 tasks.json，**只改 tasks.json 的线会被覆盖消失**；改状态也可以走 \`POST /hub/task-status\`（Host 先回写看板再投影）。
 
 ## 收尾（分身/线要结束时）
 
@@ -2817,7 +2824,7 @@ export function apply(ctx, config = {}) {
           const hubDir = join(hostRoot(hub), '.hub');
           if (!(abs === hubDir || abs.startsWith(hubDir + sep))) return reply({ ok: false, error: '只允许打开 .hub 下的文件' });
           if (!existsSync(abs)) return reply({ ok: false, error: '文件不存在' });
-          spawn('explorer.exe', [abs], { detached: true, stdio: 'ignore' }).unref();
+          spawn('explorer.exe', [abs], { detached: true, stdio: 'ignore', windowsHide: true }).unref();
           return reply({ ok: true, path: abs });
         } catch (error) { reply({ ok: false, error: String(error && error.message) }); }
       },
@@ -4286,6 +4293,8 @@ export function apply(ctx, config = {}) {
             wakeAgentMessageTarget,
             liveRunning,
             queueTriageEnabled,
+            // 2026-11-12 hub_restart 工具用（Host 侧重启 DSH）
+            restart: scheduleDesktopRestart,
             // 2026-11-10 补：taskline_create 不传 preset 时要回退到默认预设。
             // 迁包前这个变量在外层 apply 作用域里直接可见，迁包后必须显式注入，
             // 否则 taskline_create({ title }) 会 ReferenceError（`args.preset || defaultPreset` 短路掩盖了它）。

@@ -72,6 +72,16 @@
 
 ## 挂载（本机 desktop profile）
 
+### 整套装（一条命令）
+
+想把 AI-Agent-Hub 这套插件一次装齐（本插件 + 另外 7 个 + 依赖闭包）：
+
+```bash
+npx dsh-hub-suite            # 先看它要改什么：npx dsh-hub-suite --dry-run
+```
+
+需要 Node.js 18+；它会把依赖写进 DSH profile 的 `package.json`、安装依赖，并把包名登记进 `dsh.profile.bundles`。装完重启 DeepSeek Harness。
+
 需要一个能装 client 半的**bundle**（`package.json` 带 `dsh.bundle.patch` + `dsh.client`），
 装法和 hub-desktop-ui 一致 —— profile `package.json` 里加 `link:` 依赖并进 `bundles` 列表，
 再由插件自己的 `cordis.patch.yml` insert 宿主行：
