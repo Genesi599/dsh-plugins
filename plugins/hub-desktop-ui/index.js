@@ -1260,7 +1260,15 @@ export function messagePartsOf(content, { attachmentsRoot = '', maxImages = 6 } 
 }
 
 /** 把本体已完成的对话轮次整理成可注入的“继承上下文”文本（分诊分身用）。 */
-export const summarizeInheritedContext = (events, { maxTurns = 10, maxChars = 700, attachmentsRoot = '' } = {}) => {
+export const summarizeInheritedContext = (events, {
+  // 2026-11-12 用户令「分诊对话摘要吧，摘要可以多一点，准确一点」：
+  // 分诊不 fork 全史（1M 窗口装不下 7.8 万行事件），改用**更厚的摘要**——
+  // 窗口 10 轮 → 24 轮、单条 700 → 2000 字符，并加总量上限兜底。
+  maxTurns = 24,
+  maxChars = 2000,
+  maxTotalChars = 24000,
+  attachmentsRoot = '',
+} = {}) => {
   const rows = [];
   for (const event of Array.isArray(events) ? events : []) {
     if (!event) continue;
@@ -1289,7 +1297,19 @@ export const summarizeInheritedContext = (events, { maxTurns = 10, maxChars = 70
   }
   const tail = rows.slice(-maxTurns * 2);
   if (tail.length === 0) return '';
-  return tail.map((row) => `【${row.role}】${row.text}`).join('\n\n');
+  // 总量上限：从**最近**往前拼，超了就丢最早的（保证分诊看到的是刚刚发生的事，
+  // 而不是一屏远古对话）。单条已经过 maxChars 截断，这里只兜总量。
+  const picked = [];
+  let used = 0;
+  for (let i = tail.length - 1; i >= 0; i -= 1) {
+    const line = `【${tail[i].role}】${tail[i].text}`;
+    const cost = line.length + 2;
+    if (picked.length > 0 && used + cost > maxTotalChars) break;
+    picked.push(line);
+    used += cost;
+  }
+  picked.reverse();
+  return picked.join('\n\n');
 };
 
   /** 分诊分身的第一条任务书（自包含：它看不到派活方的上下文）。 */
@@ -1612,6 +1632,11 @@ export function apply(ctx, config = {}) {
   // 分诊只做「看上下文 → 三选一 → 投递」，用主线的 max reasoning 是浪费：
   // 实测单步 20–80 s，端到端 median 38 s / p90 141 s / max 307 s。
   const triagePresetOverride = String(config.triagePreset || '');
+  // 2026-11-12 用户令「实际干活的分身 fork，分诊对话摘要吧，摘要可以多一点，准确一点」：
+  // 分诊默认走 create + 厚摘要（24 轮 / 单条 2000 字 / 总量 24k），不 fork。
+  // 实测 fork 一个 7.8 万行事件的会话要复制 27 MB 磁盘、首轮输入被推到接近 1M 窗口，
+  // 而分诊只做 A/B/C 三选一 —— 不值。想切回来：profile 配 config.triageInherit: 'fork'。
+  const triageInheritMode = String(config.triageInherit || 'summary');
   // 2026-11-11 用户令「goal 别老是自己暂停」：重启后把被 disarm 的目标自动重新武装。
   // DSH 每次 session resume/fork 都会 goals.disarm(agent)（设计上要「人来点继续」），
   // 而我们重启频繁 → 各会话目标反复变「等待继续」→ 进度停住。这里在启动续跑前 rearm。
@@ -1639,6 +1664,7 @@ export function apply(ctx, config = {}) {
     state: {
       defaultPreset,
       triagePresetOverride,
+      triageInheritMode,
       liveRunning,
       dispatchLedger,
       queueTriageEnabled,
@@ -3021,6 +3047,31 @@ export function apply(ctx, config = {}) {
       },
     }), 'hub-desktop-ui:/hub/session-events');
 
+    /** 模型目录里的推理强度档位（全局切换与单会话切换共用）。
+     *  目录形状（sessionController.modelCatalog()）：
+     *    groups[i].models[j].reasoning = { efforts: [{ id, name, description }], defaultEffort }
+     *  规则：① 模型没声明 efforts → 返回空串，**不发 reasoningEffort**（不给假档位）；
+     *        ② 请求的档位不在该模型档位里 → 夹到 defaultEffort，再不行取第一档。
+     *  2026-11-12 用户报「这里没办法选模型强度」：侧栏切模型只发 provider/model，强度无处可选。 */
+    const resolveReasoningEffort = async (controller, provider, model, requested) => {
+      const wanted = String(requested || '').trim();
+      let catalog = null;
+      try { catalog = await controller.modelCatalog(); } catch (error) { catalog = null; }
+      const group = catalog && Array.isArray(catalog.groups)
+        ? catalog.groups.find((item) => item && item.id === provider) : null;
+      const def = group && Array.isArray(group.models)
+        ? group.models.find((item) => item && item.id === model) : null;
+      const reasoning = def && def.reasoning ? def.reasoning : null;
+      const ids = reasoning && Array.isArray(reasoning.efforts)
+        ? reasoning.efforts.filter((effort) => effort && effort.id).map((effort) => String(effort.id))
+        : [];
+      if (!ids.length) return { effort: '', supported: [], requested: wanted, clamped: false };
+      if (wanted && ids.includes(wanted)) return { effort: wanted, supported: ids, requested: wanted, clamped: false };
+      const fallback = reasoning.defaultEffort && ids.includes(String(reasoning.defaultEffort))
+        ? String(reasoning.defaultEffort) : ids[0];
+      return { effort: fallback, supported: ids, requested: wanted, clamped: Boolean(wanted) };
+    };
+
     // GET /hub/models：模型目录（给「一键切换模型」下拉用）。
     hub.effect(() => server.register({
       kind: 'exact',
@@ -3092,8 +3143,19 @@ export function apply(ctx, config = {}) {
           if (!controller || typeof controller.selectModel !== 'function') {
             return reply({ ok: false, error: 'selectModel 不可用' });
           }
-          await controller.selectModel({ sessionId, provider, model });
-          reply({ ok: true, sessionId, provider, model });
+          const resolved = await resolveReasoningEffort(controller, provider, model, body.reasoningEffort);
+          const reasoningEffort = resolved.effort;
+          await controller.selectModel({
+            sessionId, provider, model,
+            ...(reasoningEffort ? { reasoningEffort } : {}),
+          });
+          reply({
+            ok: true, sessionId, provider, model,
+            reasoningEffort: reasoningEffort || null,
+            requestedEffort: resolved.requested || null,
+            supportedEfforts: resolved.supported,
+            clamped: resolved.clamped,
+          });
         } catch (error) {
           reply({ ok: false, error: String((error && error.message) || error) });
         }
@@ -3120,6 +3182,9 @@ export function apply(ctx, config = {}) {
           const model = String(body.model || '');
           if (!provider || !model) return reply({ ok: false, error: '缺 provider/model' });
           const controller = hub.get('sessionController');
+          // 强度：请求里给了就按目录校验（不支持的档位夹到该模型默认档），没给就不发字段
+          const resolved = await resolveReasoningEffort(controller, provider, model, body.reasoningEffort);
+          const reasoningEffort = resolved.effort;
           // —— 2026-10-23 修「全局切换对所有已有对话不生效」——
           // 旧实现枚举用 sessions.list()（只含活会话，冷会话全漏）。
           // 会话模型解析顺序（dsh-api-session-controller agent.js selectionFor）：
@@ -3153,7 +3218,7 @@ export function apply(ctx, config = {}) {
           try {
             mkdirSync(dirname(backupFile), { recursive: true });
             writeFileSync(backupFile, `${JSON.stringify({
-              at: Date.now(), provider, model, previousDefault, sessions: targets,
+              at: Date.now(), provider, model, reasoningEffort: reasoningEffort || null, previousDefault, sessions: targets,
             }, null, 2)}\n`, 'utf8');
           } catch (error) {
             console.warn(`[hub-desktop-ui] model bulk backup write failed: ${String(error)}`);
@@ -3190,12 +3255,16 @@ export function apply(ctx, config = {}) {
           };
           const need = targets.filter((sessionId) => {
             const current = readSelection(sessionId);
-            return !(current && current.provider === provider && current.model === model);
+            if (!current || current.provider !== provider || current.model !== model) return true;
+            // 模型一致还要比强度：请求了档位而该会话记录的档位不同 → 仍需切（否则「选了强度没生效」）
+            if (!reasoningEffort) return false;
+            return String(current.reasoningEffort || '') !== reasoningEffort;
           });
           const skipped = targets.length - need.length;
           modelBulkProgress = {
             running: true, done: skipped, total: targets.length, switched: 0,
-            provider, model, startedAt: Date.now(), finishedAt: 0,
+            provider, model, reasoningEffort: reasoningEffort || null,
+            startedAt: Date.now(), finishedAt: 0,
             skipped,
           };
           const BATCH = 12;
@@ -3203,10 +3272,16 @@ export function apply(ctx, config = {}) {
             // eslint-disable-next-line no-await-in-loop
             await Promise.all(need.slice(start, start + BATCH).map(async (sessionId) => {
               try {
-                await controller.selectModel({ sessionId, provider, model });
+                await controller.selectModel({
+                  sessionId, provider, model,
+                  ...(reasoningEffort ? { reasoningEffort } : {}),
+                });
                 switched += 1;
                 // 成功即记账本（projcache 投影异步 flush，短路不能只信它）
-                bulkAppliedSelections.set(sessionId, { at: Date.now(), selection: { provider, model } });
+                bulkAppliedSelections.set(sessionId, {
+                  at: Date.now(),
+                  selection: { provider, model, ...(reasoningEffort ? { reasoningEffort } : {}) },
+                });
               } catch (error) {
                 failures.push(`${sessionId}: ${String(error && error.message)}`);
               }
@@ -3218,7 +3293,7 @@ export function apply(ctx, config = {}) {
           try {
             const def = hub.get('agentDefaultModel');
             if (def && typeof def.saveSelection === 'function') {
-              await def.saveSelection({ provider, model });
+              await def.saveSelection({ provider, model, ...(reasoningEffort ? { reasoningEffort } : {}) });
               saved = true;
             }
           } catch (error) { /* ignore */ }
@@ -3233,6 +3308,11 @@ export function apply(ctx, config = {}) {
           }
           reply({
             ok: true, provider, model, total: targets.length, switched, skipped, saved,
+            // 实际生效的强度（Host 校准后的值）+ 该模型支持的档位，供界面/接口核对
+            reasoningEffort: reasoningEffort || null,
+            requestedEffort: resolved.requested || null,
+            supportedEfforts: resolved.supported,
+            clamped: resolved.clamped,
             tookMs: Date.now() - modelBulkProgress.startedAt,
             failures: failures.slice(0, 10),
             autoResumed,
@@ -3267,11 +3347,16 @@ export function apply(ctx, config = {}) {
             return reply({ ok: false, error: '备份档案无效或缺少旧默认' });
           }
           const controller = hub.get('sessionController');
+          // 旧默认若带强度（agentDefaultModel.currentSelection() 的 shape 含 reasoningEffort）一并还原
+          const prevEffort = prev.reasoningEffort ? String(prev.reasoningEffort) : '';
           let switched = 0;
           const failures = [];
           for (const sessionId of data.sessions) {
             try {
-              await controller.selectModel({ sessionId, provider: prev.provider, model: prev.model });
+              await controller.selectModel({
+                sessionId, provider: prev.provider, model: prev.model,
+                ...(prevEffort ? { reasoningEffort: prevEffort } : {}),
+              });
               switched += 1;
             } catch (error) {
               failures.push(`${sessionId}: ${String(error && error.message)}`);
@@ -3280,10 +3365,17 @@ export function apply(ctx, config = {}) {
           try {
             const def = hub.get('agentDefaultModel');
             if (def && typeof def.saveSelection === 'function') {
-              await def.saveSelection({ provider: prev.provider, model: prev.model });
+              await def.saveSelection({
+                provider: prev.provider, model: prev.model,
+                ...(prevEffort ? { reasoningEffort: prevEffort } : {}),
+              });
             }
           } catch (error) { /* ignore */ }
-          reply({ ok: true, provider: prev.provider, model: prev.model, total: data.sessions.length, switched, failures: failures.slice(0, 10) });
+          reply({
+            ok: true, provider: prev.provider, model: prev.model,
+            reasoningEffort: prevEffort || null,
+            total: data.sessions.length, switched, failures: failures.slice(0, 10),
+          });
         } catch (error) {
           reply({ ok: false, error: `回滚失败（无备份？）：${String(error && error.message)}` });
         }

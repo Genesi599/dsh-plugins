@@ -115,7 +115,7 @@ window.__ModuleLoader__.load({
    （自检 selectorHits: treeitem=0 / sectionLabel=0）→ 这类选择器是死规则，
    已改写为本插件自己的类名（.hub-proj / .hub-chip / .hub-head-label）。 */
 [data-slot="sidebar.workspaces"] .hub-head-label {
-  font-size: 11.5px !important;
+  font-size: calc(11.5px + var(--dsh-content-font-delta, 0px)) !important;
   letter-spacing: 0.04em;
 }
 
@@ -127,14 +127,14 @@ window.__ModuleLoader__.load({
   padding-bottom: 0 !important;
   margin-top: 6px !important;
   border-radius: 6px !important;
-  font-size: 12px !important;
+  font-size: calc(12px + var(--dsh-content-font-delta, 0px)) !important;
   box-shadow: inset 0 1px 0 var(--dsw-alias-border-l1);
 }
 [data-slot="sidebar.workspaces"] .hub-proj:first-of-type { margin-top: 0 !important; }
 
 /* 成员芯片（本插件的 .hub-chip）：字号/内边距与项目行同节奏 */
 [data-slot="sidebar.workspaces"] .hub-chip {
-  font-size: 11.5px !important;
+  font-size: calc(11.5px + var(--dsh-content-font-delta, 0px)) !important;
   padding: 2px 6px 2px 2px !important;
   border-radius: 10px !important;
 }
@@ -241,7 +241,7 @@ html[data-hub-room] .hub-rate-hint {
 }
 [data-slot="sidebar"] button[class*="_newSession"]::after {
   content: "New project";
-  font-size: 13px;
+  font-size: calc(13px + var(--dsh-content-font-delta, 0px));
   letter-spacing: 0.01em;
   margin-left: 6px;
   color: var(--dsw-alias-label-primary);
@@ -251,7 +251,7 @@ html[data-hub-room] .hub-rate-hint {
   height: 16px;
 }
 [data-slot="sidebar"] [class*="_newSession"] svg {
-  font-size: 13px;
+  font-size: calc(13px + var(--dsh-content-font-delta, 0px));
 }
 */
 
@@ -283,7 +283,7 @@ html[data-hub-room] .hub-rate-hint {
   gap: 8px;
   padding: 4px 12px;
   border-bottom: 1px solid var(--dsw-alias-border-l1);
-  font-size: 10px;
+  font-size: calc(10px + var(--dsh-content-font-delta, 0px));
   color: var(--dsw-alias-label-secondary);
 }
 .hub-cc-toggle {
@@ -295,7 +295,7 @@ html[data-hub-room] .hub-rate-hint {
   background: transparent;
   color: var(--dsw-alias-label-secondary);
   font: inherit;
-  font-size: 9.5px;
+  font-size: calc(9.5px + var(--dsh-content-font-delta, 0px));
   cursor: pointer;
 }
 .hub-cc-toggle:hover {
@@ -363,7 +363,7 @@ html[data-hub-room] .hub-rate-hint {
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  font-size: 12px;
+  font-size: calc(12px + var(--dsh-content-font-delta, 0px));
   line-height: 1;
 }
 .hub-cc-name {
@@ -373,7 +373,7 @@ html[data-hub-room] .hub-rate-hint {
   white-space: normal;
   word-break: break-word;
   line-height: 1.2;
-  font-size: 11.5px;
+  font-size: calc(11.5px + var(--dsh-content-font-delta, 0px));
   font-weight: 600;
   color: var(--dsw-alias-label-primary);
 }
@@ -390,14 +390,14 @@ html[data-hub-room] .hub-rate-hint {
 }
 .hub-cc-dur {
   flex: 0 0 auto;
-  font-size: 9px;
+  font-size: calc(9px + var(--dsh-content-font-delta, 0px));
   line-height: 1;
   font-variant-numeric: tabular-nums;
   color: var(--dsw-alias-state-success-primary);
 }
 .hub-cc-tps {
   flex: 0 0 auto;
-  font-size: 9px;
+  font-size: calc(9px + var(--dsh-content-font-delta, 0px));
   line-height: 1;
   font-variant-numeric: tabular-nums;
   color: var(--dsw-alias-label-secondary);
@@ -420,7 +420,7 @@ html[data-hub-room] .hub-rate-hint {
   border-radius: 6px;
   padding: 0 5px;
   height: 20px;
-  font-size: 10px;
+  font-size: calc(10px + var(--dsh-content-font-delta, 0px));
   line-height: 20px;
   cursor: pointer;
   max-width: 150px;
@@ -433,7 +433,7 @@ html[data-hub-room] .hub-rate-hint {
   background: var(--dsw-alias-bg-layer-2);
 }
 .hub-cc-model-caret {
-  font-size: 8px;
+  font-size: calc(8px + var(--dsh-content-font-delta, 0px));
   opacity: 0.75;
 }
 .hub-cc-model-menu {
@@ -457,7 +457,7 @@ html[data-hub-room] .hub-rate-hint {
   text-align: left;
   padding: 4px 7px;
   border-radius: 6px;
-  font-size: 10.5px;
+  font-size: calc(10.5px + var(--dsh-content-font-delta, 0px));
   cursor: pointer;
   white-space: nowrap;
   overflow: hidden;
@@ -468,7 +468,7 @@ html[data-hub-room] .hub-rate-hint {
 /* 提供商分组标题（2026-10-23） */
 .hub-cc-model-group {
   padding: 6px 8px 3px;
-  font-size: 9px;
+  font-size: calc(9px + var(--dsh-content-font-delta, 0px));
   letter-spacing: 0.02em;
   text-transform: none;
   color: var(--dsw-alias-label-secondary);
@@ -494,7 +494,7 @@ html[data-hub-room] .hub-rate-hint {
   background: transparent;
   color: var(--dsw-alias-label-secondary);
   font: inherit;
-  font-size: 10px;
+  font-size: calc(10px + var(--dsh-content-font-delta, 0px));
   line-height: 1;
   cursor: pointer;
 }
@@ -540,7 +540,7 @@ html[data-hub-room] .hub-rate-hint {
   background: var(--dsw-alias-bg-layer-2);
   color: var(--dsw-alias-label-primary);
   font: inherit;
-  font-size: 11.5px;
+  font-size: calc(11.5px + var(--dsh-content-font-delta, 0px));
   line-height: 1.5;
   outline: none;
 }
@@ -559,7 +559,7 @@ html[data-hub-room] .hub-rate-hint {
   background: var(--dsw-alias-bg-layer-2);
   color: var(--dsw-alias-label-secondary);
   font: inherit;
-  font-size: 10.5px;
+  font-size: calc(10.5px + var(--dsh-content-font-delta, 0px));
   line-height: 1;
   cursor: pointer;
   white-space: nowrap;
@@ -576,7 +576,7 @@ html[data-hub-room] .hub-rate-hint {
   flex: 0 0 auto;
   max-width: 100%;
   padding: 2px 8px 0;
-  font-size: 9.5px;
+  font-size: calc(9.5px + var(--dsh-content-font-delta, 0px));
   color: var(--dsw-alias-state-error-primary);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -597,7 +597,7 @@ html[data-hub-room] .hub-rate-hint {
   background: var(--dsw-alias-bg-layer-1);
   color: var(--dsw-alias-label-secondary);
   font: inherit;
-  font-size: 10px;
+  font-size: calc(10px + var(--dsh-content-font-delta, 0px));
   cursor: pointer;
 }
 .hub-cc-restore:hover {
@@ -7056,46 +7056,101 @@ function HubWorkspaces(props) {
       const [modelOpen, setModelOpen] = React.useState(false);
       const [modelQuery, setModelQuery] = React.useState('');
       const [modelPopover, setModelPopover] = React.useState({ left: 12, bottom: 60 });
+      // 2026-11-12（用户报「这里没办法选模型强度」）：全局默认的推理强度 + 浮层里展开了强度档位的模型。
+      // 目录形状：group.models[i].reasoning = { efforts: [{id,name,description}], defaultEffort }；
+      // 全局默认选择形状：{ provider, model, reasoningEffort }。没有 reasoning 的模型不给强度入口。
+      const [modelEffort, setModelEffort] = React.useState('');
+      const [modelEffortFor, setModelEffortFor] = React.useState('');
       const modelButtonRef = React.useRef(null);
       const [busy, setBusy] = React.useState(false);
       // 全局切模型进度（2026-10-23 用户要求加进度条）：{done,total,running} | null
       const [progress, setProgress] = React.useState(null);
       const timer = React.useRef(null);
 
-      React.useEffect(() => {
-        let cancelled = false;
-        (async () => {
-          try {
-            const res = await fetch('/hub/models');
-            const data = await res.json();
-            if (cancelled || !data || !data.ok) return;
-            const options = [];
-            for (const group of data.groups || []) {
-              for (const model of group.models || []) {
-                options.push({
-                  value: `${group.id}/${model.id}`,
-                  label: `${group.name} · ${model.name}`,
-                  groupName: group.name,
-                  modelName: model.name,
-                });
-              }
-            }
-            setModelOptions(options);
-            if (data.default) setModelValue(`${data.default.provider}/${data.default.model}`);
-          } catch (error) { /* Host 未重启时路由不存在，忽略 */ }
-        })();
-        return () => { cancelled = true; };
-      }, []);
+      // 目录里档位名是 Off/Low/High/Max（英文），侧栏其余文案是中文 → 已知 id 给中文名，
+      // 目录里出现别的档位就退回目录自带 name，不硬编码「只有四档」。
+      const EFFORT_LABELS = { off: '关', low: '低', high: '高', max: '最高' };
+      const EFFORT_DESCRIPTIONS = {
+        off: '不需要推理的简单任务，最快',
+        low: '日常或对延迟敏感的任务',
+        high: '多数任务的默认平衡档',
+        max: '留给最难的、质量优先的任务',
+      };
+      const effortName = (efforts, id) => {
+        const hit = (efforts || []).find((effort) => effort.id === id);
+        if (!hit) return '';
+        return EFFORT_LABELS[hit.id] || hit.name || hit.id;
+      };
+      const effortDescription = (efforts, id) => {
+        const hit = (efforts || []).find((effort) => effort.id === id);
+        if (!hit) return '';
+        return EFFORT_DESCRIPTIONS[hit.id] || hit.description || '';
+      };
 
+      const loadModelCatalog = async () => {
+        try {
+          const res = await fetch('/hub/models');
+          const data = await res.json();
+          if (!data || !data.ok) return;
+          const options = [];
+          for (const group of data.groups || []) {
+            for (const model of group.models || []) {
+              // 只有目录明确给了 reasoning.efforts 的模型才算「支持强度」——没给的不显示档位
+              const rawEfforts = model.reasoning && Array.isArray(model.reasoning.efforts)
+                ? model.reasoning.efforts : [];
+              const efforts = rawEfforts
+                .filter((effort) => effort && effort.id)
+                .map((effort) => ({
+                  id: String(effort.id),
+                  name: String(effort.name || effort.id),
+                  description: effort.description ? String(effort.description) : '',
+                }));
+              options.push({
+                value: `${group.id}/${model.id}`,
+                label: `${group.name} · ${model.name}`,
+                groupName: group.name,
+                modelName: model.name,
+                efforts,
+                defaultEffort: model.reasoning && model.reasoning.defaultEffort
+                  ? String(model.reasoning.defaultEffort) : '',
+              });
+            }
+          }
+          setModelOptions(options);
+          if (data.default) {
+            setModelValue(`${data.default.provider}/${data.default.model}`);
+            setModelEffort(data.default.reasoningEffort ? String(data.default.reasoningEffort) : '');
+          }
+        } catch (error) { /* Host 未重启时路由不存在，忽略 */ }
+      };
+
+      React.useEffect(() => { loadModelCatalog(); }, []);
+
+      const currentOption = modelOptions.find((option) => option.value === modelValue) || null;
+      const currentEfforts = currentOption ? currentOption.efforts : [];
+      const currentEffortLabel = currentOption && currentEfforts.length
+        ? effortName(currentEfforts, modelEffort || currentOption.defaultEffort)
+        : '';
       const currentModelLabel = (() => {
         const hit = modelOptions.find((option) => option.value === modelValue);
         return hit ? hit.modelName : (modelOptions.length === 0 ? '模型…' : '选择模型');
       })();
 
+      /** 这一行实际会生效的强度：目录没有档位 → ''（不传）；否则「当前显式选择 → 该模型默认 → 第一档」。 */
+      const effortFor = (option, explicit) => {
+        if (!option || !option.efforts.length) return '';
+        const ids = option.efforts.map((effort) => effort.id);
+        if (explicit && ids.includes(explicit)) return explicit;
+        if (option.value === modelValue && modelEffort && ids.includes(modelEffort)) return modelEffort;
+        if (option.defaultEffort && ids.includes(option.defaultEffort)) return option.defaultEffort;
+        return ids[0] || '';
+      };
+
       const toggleModelMenu = () => {
         setModelOpen((open) => {
           if (open) return false;
           setModelQuery('');
+          setModelEffortFor('');
           const rect = modelButtonRef.current ? modelButtonRef.current.getBoundingClientRect() : null;
           if (rect) {
             setModelPopover({
@@ -7107,11 +7162,14 @@ function HubWorkspaces(props) {
         });
       };
 
-      const switchModel = async (value) => {
+      const switchModel = async (value, effort) => {
         if (!value || busy) return;
         const at = value.indexOf('/');
         const provider = value.slice(0, at);
         const model = value.slice(at + 1);
+        const target = modelOptions.find((option) => option.value === value) || null;
+        // 强度只在目录声明了档位时才发；不支持的模型不带这个字段（不发假档位）
+        const reasoningEffort = effortFor(target, effort);
         setBusy(true);
         setProgress({ done: 0, total: 0, running: true });
         // 进度轮询（2026-10-23 用户要求）：批量切模型逐会话处理，几十秒内完成，
@@ -7131,14 +7189,26 @@ function HubWorkspaces(props) {
         };
         const timer = setInterval(poll, 400);
         try {
-          await fetch('/hub/switch-model', {
+          const res = await fetch('/hub/switch-model', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ provider, model }),
+            body: JSON.stringify({
+              provider,
+              model,
+              ...(reasoningEffort ? { reasoningEffort } : {}),
+            }),
           });
+          const payload = await res.json().catch(() => null);
           await poll();
           setModelValue(value);
+          // 以 Host 回执为准：Host 会把不支持的档位夹到该模型默认档，界面显示实际生效值
+          setModelEffort(
+            payload && payload.ok && payload.reasoningEffort
+              ? String(payload.reasoningEffort)
+              : reasoningEffort,
+          );
           setModelOpen(false);
+          setModelEffortFor('');
         } catch (error) {
           console.error('[hub-desktop-ui] switch model failed', error);
         } finally {
@@ -7588,7 +7658,9 @@ function HubWorkspaces(props) {
         h('button', {
           type: 'button',
           ref: modelButtonRef,
-          title: '一键把所有会话切到这个模型',
+          title: currentEffortLabel
+            ? `当前强度：${currentEffortLabel}｜点开可换模型与强度（一键应用到所有对话）`
+            : '一键把所有会话切到这个模型',
           onClick: toggleModelMenu,
           style: {
             height: '18px', maxWidth: '52%', minWidth: 0, flex: '0 1 auto', padding: '0 7px',
@@ -7599,13 +7671,14 @@ function HubWorkspaces(props) {
           },
         }, modelOptions.length === 0
           ? '模型…'
-          // 侧栏窄：去掉 DeepSeek- 前缀再显示，避免只剩 "Deep"（完整名在 hover title 里）
-          : `${String(currentModelLabel).replace(/^DeepSeek[- ]/i, '')} ▾`),
+          // 侧栏窄：去掉 DeepSeek- 前缀再显示，避免只剩 "Deep"（完整名在 hover title 里）；
+          // 支持强度的模型再把当前档位挂在名字后面（完整说明在 hover title）
+          : `${String(currentModelLabel).replace(/^DeepSeek[- ]/i, '')}${currentEffortLabel ? `·${currentEffortLabel}` : ''} ▾`),
         modelOpen ? h(
           'div',
           {
             style: {
-              position: 'fixed', zIndex: 1200, width: '240px', maxHeight: '320px',
+              position: 'fixed', zIndex: 1200, width: '300px', maxHeight: '400px',
               display: 'flex', flexDirection: 'column',
               left: `${modelPopover.left}px`, bottom: `${modelPopover.bottom}px`,
               borderRadius: '12px', overflow: 'hidden',
@@ -7677,26 +7750,83 @@ function HubWorkspaces(props) {
               })
               .map((option) => {
                 const active = option.value === modelValue;
+                const efforts = option.efforts || [];
+                // 这一行会生效的强度（点行本体即按它切）：当前模型用界面上的当前值，其它模型用其默认档
+                const shownEffort = efforts.length
+                  ? effortFor(option, option.value === modelValue ? modelEffort : '')
+                  : '';
+                const expanded = modelEffortFor === option.value;
                 return h(
-                  'button',
-                  {
-                    key: option.value,
-                    type: 'button',
-                    title: option.label,
-                    onClick: () => switchModel(option.value),
-                    style: {
-                      display: 'flex', alignItems: 'center', gap: '6px', width: '100%',
-                      padding: '6px 10px', border: 'none', textAlign: 'left',
-                      background: active ? 'var(--dsw-alias-bg-layer-2)' : 'transparent',
-                      color: 'var(--dsw-alias-label-primary)', cursor: 'pointer',
-                      fontSize: '11.5px',
-                    },
-                  },
-                  h('span', {
-                    style: { flex: '0 0 auto', fontSize: '10px', color: 'var(--dsw-alias-label-secondary)' },
-                  }, option.groupName),
-                  h('span', { style: { flex: '1', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, option.modelName),
-                  active ? h('span', { style: { flex: '0 0 auto', opacity: 0.8 } }, '✓') : null,
+                  'div',
+                  { key: option.value },
+                  h(
+                    'div',
+                    { style: { display: 'flex', alignItems: 'center', gap: '2px' } },
+                    h(
+                      'button',
+                      {
+                        type: 'button',
+                        title: option.label,
+                        onClick: () => switchModel(option.value, shownEffort),
+                        style: {
+                          display: 'flex', alignItems: 'center', gap: '6px',
+                          flex: '1 1 auto', minWidth: 0,
+                          padding: '6px 10px', border: 'none', textAlign: 'left',
+                          background: active ? 'var(--dsw-alias-bg-layer-2)' : 'transparent',
+                          color: 'var(--dsw-alias-label-primary)', cursor: 'pointer',
+                          fontSize: '11.5px',
+                        },
+                      },
+                      h('span', {
+                        style: { flex: '0 0 auto', fontSize: '10px', color: 'var(--dsw-alias-label-secondary)' },
+                      }, option.groupName),
+                      h('span', { style: { flex: '1', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, option.modelName),
+                      active ? h('span', { style: { flex: '0 0 auto', opacity: 0.8 } }, '✓') : null,
+                    ),
+                    // 强度入口只出现在目录声明了档位的模型上；点击展开/收起档位行
+                    efforts.length
+                      ? h('button', {
+                        type: 'button',
+                        title: `推理强度：${effortName(efforts, shownEffort)}${effortDescription(efforts, shownEffort) ? `（${effortDescription(efforts, shownEffort)}）` : ''}｜点击${expanded ? '收起' : '展开'}档位`,
+                        onClick: () => setModelEffortFor((cur) => (cur === option.value ? '' : option.value)),
+                        style: {
+                          flex: '0 0 auto', height: '20px', padding: '0 7px', marginRight: '8px',
+                          borderRadius: '10px',
+                          border: `1px solid ${active ? 'var(--dsw-alias-brand-primary)' : 'var(--dsw-alias-border-l1)'}`,
+                          background: 'transparent',
+                          color: active ? 'var(--dsw-alias-brand-primary)' : 'var(--dsw-alias-label-secondary)',
+                          cursor: 'pointer', fontSize: '9.5px', whiteSpace: 'nowrap',
+                        },
+                      }, `${effortName(efforts, shownEffort)} ${expanded ? '▴' : '▾'}`)
+                      : null,
+                  ),
+                  expanded && efforts.length
+                    ? h(
+                      'div',
+                      {
+                        style: {
+                          display: 'flex', flexWrap: 'wrap', gap: '4px',
+                          padding: '0 10px 7px 24px',
+                        },
+                      },
+                      ...efforts.map((effort) => {
+                        const chosen = effort.id === shownEffort;
+                        return h('button', {
+                          key: `${option.value}#${effort.id}`,
+                          type: 'button',
+                          title: effortDescription(efforts, effort.id) || effort.name,
+                          onClick: () => switchModel(option.value, effort.id),
+                          style: {
+                            height: '20px', padding: '0 8px', borderRadius: '10px',
+                            border: `1px solid ${chosen ? 'var(--dsw-alias-brand-primary)' : 'var(--dsw-alias-border-l1)'}`,
+                            background: chosen ? 'var(--dsw-alias-bg-layer-1)' : 'transparent',
+                            color: chosen ? 'var(--dsw-alias-brand-primary)' : 'var(--dsw-alias-label-secondary)',
+                            cursor: 'pointer', fontSize: '10px', whiteSpace: 'nowrap',
+                          },
+                        }, `${effortName(efforts, effort.id)}${chosen ? ' ✓' : ''}`);
+                      }),
+                    )
+                    : null,
                 );
               }),
           ),

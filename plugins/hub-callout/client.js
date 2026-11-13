@@ -64,7 +64,7 @@ blockquote[data-hub-callout] > p { margin: 0 0 0.6em; }
   align-items: center;
   gap: 6px;
   margin: 0 0 4px;
-  font-size: 13px;
+  font-size: calc(13px + var(--dsh-content-font-delta, 0px));
   font-weight: 600;
   line-height: 1.3;
   color: var(--hub-accent);

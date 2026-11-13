@@ -1,6 +1,6 @@
 {
   "name": "dsh-hub-callout",
-  "version": "0.1.1",
+  "version": "0.1.5",
   "description": "把消息里的 GitHub admonition 语法（> [!NOTE] / > [!BOOK] 等）渲染成带彩色标题的提示块。",
   "type": "module",
   "main": "index.js",
@@ -29,5 +29,14 @@
       "inject": []
     }
   },
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Genesi599/dsh-plugins.git",
+    "directory": "plugins/hub-callout"
+  },
+  "homepage": "https://github.com/Genesi599/dsh-plugins/tree/main/plugins/hub-callout",
+  "bugs": {
+    "url": "https://github.com/Genesi599/dsh-plugins/tree/main/plugins/hub-callout/issues"
+  }
 }

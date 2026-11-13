@@ -72,6 +72,28 @@ dsh plugin --profile <profile> add dsh-project-room
 
 或在本机用插件管理器安装指向该目录的 bundle。
 
+## 更新
+
+```sh
+# 升到当前主版本范围内的最新版
+dsh plugin --profile <profile> update dsh-project-room
+
+# 或直接装最新版（含跨主版本）
+dsh plugin --profile <profile> add dsh-project-room@latest
+```
+
+用整套装的话，重跑一次即可按版本范围升级全部插件：
+
+```sh
+npx dsh-hub-suite@latest
+```
+
+**更新后必须重启 DeepSeek Harness** —— 插件在应用启动时加载。核对版本：
+
+```sh
+dsh plugin --profile <profile> list --depth 0
+```
+
 ## 卸载 / 回退
 
 停用或卸载插件后侧栏立刻回到宿主原生会话列表（本插件只在 `sidebar.workspaces` / `shell.overlay` 两个 slot 里注册，不改宿主源码）。

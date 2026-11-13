@@ -61,6 +61,28 @@ Anything else on stdout, or a non-zero exit, is ignored for injection purposes a
 logged. Scripts are spawned hidden (`windowsHide`) so they never flash a console
 window on Windows.
 
+## 更新
+
+```sh
+# 升到当前主版本范围内的最新版
+dsh plugin --profile <profile> update dsh-hub-reminders
+
+# 或直接装最新版（含跨主版本）
+dsh plugin --profile <profile> add dsh-hub-reminders@latest
+```
+
+用整套装的话，重跑一次即可按版本范围升级全部插件：
+
+```sh
+npx dsh-hub-suite@latest
+```
+
+**更新后必须重启 DeepSeek Harness** —— 插件在应用启动时加载。核对版本：
+
+```sh
+dsh plugin --profile <profile> list --depth 0
+```
+
 ## License
 
 MIT

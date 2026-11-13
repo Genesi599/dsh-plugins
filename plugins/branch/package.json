@@ -1,6 +1,6 @@
 {
   "name": "dsh-hub-branch",
-  "version": "0.1.3",
+  "version": "0.1.5",
   "type": "module",
   "main": "./index.js",
   "description": "DSH 会话分支：branch-list / branch-fork / branch-pin / branch-merge 四个命令",
@@ -12,13 +12,17 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Genesi599/AI-Agent-Hub.git",
-    "directory": "dsh/plugins/branch"
+    "url": "git+https://github.com/Genesi599/dsh-plugins.git",
+    "directory": "plugins/branch"
   },
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
     }
   },
-  "icon": "./icon.svg"
+  "icon": "./icon.svg",
+  "homepage": "https://github.com/Genesi599/dsh-plugins/tree/main/plugins/branch",
+  "bugs": {
+    "url": "https://github.com/Genesi599/dsh-plugins/tree/main/plugins/branch/issues"
+  }
 }

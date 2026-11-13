@@ -303,42 +303,42 @@ window.__ModuleLoader__.load({
   flex: 1; min-width: 0; height: 22px; box-sizing: border-box; padding: 0 6px;
   border-radius: 6px; border: 1px solid var(--dsw-alias-border-l1);
   background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-primary);
-  font-size: 11px; outline: none;
+  font-size: calc(11px + var(--dsh-content-font-delta, 0px)); outline: none;
 }
 .pr-head { display: flex; align-items: center; gap: 6px; padding: 2px 6px 4px; flex: 0 0 auto; }
-.pr-head-title { font-size: 11.5px; letter-spacing: 0.04em; font-weight: 600; color: var(--dsw-alias-label-secondary); }
-.pr-head-count { font-size: 10px; color: var(--dsw-alias-label-secondary); opacity: .75; margin-left: auto; }
+.pr-head-title { font-size: calc(11.5px + var(--dsh-content-font-delta, 0px)); letter-spacing: 0.04em; font-weight: 600; color: var(--dsw-alias-label-secondary); }
+.pr-head-count { font-size: calc(10px + var(--dsh-content-font-delta, 0px)); color: var(--dsw-alias-label-secondary); opacity: .75; margin-left: auto; }
 /* 「未分组」那一行：折叠按钮 + 清理按钮 */
 .pr-loose-row { display: flex; gap: 4px; align-items: center; padding: 0 6px 6px; flex: 0 0 auto; }
 .pr-loose-toggle {
   padding: 1px 6px;
   border: 1px solid var(--dsw-alias-border-l1); border-radius: 6px;
   background: transparent; color: var(--dsw-alias-label-secondary);
-  font-size: 10px; line-height: 1.6; cursor: pointer; flex: 0 0 auto;
+  font-size: calc(10px + var(--dsh-content-font-delta, 0px)); line-height: 1.6; cursor: pointer; flex: 0 0 auto;
 }
 .pr-loose-toggle:hover { background: var(--dsw-alias-bg-layer-2); color: var(--dsw-alias-label-primary); }
 .pr-chip-badge {
   flex: 0 0 auto; min-width: 14px; height: 14px; padding: 0 3px; border-radius: 7px;
   display: inline-flex; align-items: center; justify-content: center;
   background: var(--dsw-alias-bg-layer-2); color: var(--dsw-alias-label-secondary);
-  font-size: 9px; line-height: 1; font-variant-numeric: tabular-nums;
+  font-size: calc(9px + var(--dsh-content-font-delta, 0px)); line-height: 1; font-variant-numeric: tabular-nums;
 }
-.pr-chip-elapsed { flex: 0 0 auto; font-size: 9px; line-height: 1; font-variant-numeric: tabular-nums; color: var(--dsw-alias-state-success-primary); }
+.pr-chip-elapsed { flex: 0 0 auto; font-size: calc(9px + var(--dsh-content-font-delta, 0px)); line-height: 1; font-variant-numeric: tabular-nums; color: var(--dsw-alias-state-success-primary); }
 /* 分身子行：树状（├ / └ 竖线缩进） */
 .pr-chip-clones { display: flex; flex-direction: column; gap: 1px; margin-top: 1px; padding-left: 0; }
 .pr-clone-row {
   display: flex; align-items: center; gap: 3px;
-  font-size: 9.5px; line-height: 1.5; color: var(--dsw-alias-label-secondary);
+  font-size: calc(9.5px + var(--dsh-content-font-delta, 0px)); line-height: 1.5; color: var(--dsw-alias-label-secondary);
   cursor: pointer; border-radius: 3px; padding: 0;
 }
 .pr-clone-row:hover { background: var(--dsw-alias-interactive-bg-hover, rgba(255,255,255,0.06)); color: var(--dsw-alias-label-primary); }
-.pr-tree-rail { flex: 0 0 auto; width: 7px; color: var(--dsw-alias-border-l2, #4a4a4a); font-size: 9px; line-height: 1.5; }
+.pr-tree-rail { flex: 0 0 auto; width: 7px; color: var(--dsw-alias-border-l2, #4a4a4a); font-size: calc(9px + var(--dsh-content-font-delta, 0px)); line-height: 1.5; }
 .pr-clone-dot { flex: 0 0 auto; width: 5px; height: 5px; border-radius: 50%; background: transparent; box-shadow: inset 0 0 0 1px var(--dsw-alias-label-secondary); }
 .pr-clone-dot.on { background: var(--dsw-alias-state-success-primary, #4ade80); box-shadow: none; }
 /* 同理：分身子行名不再 ellipsis，长任务名完整显示（行高会自动撑开）。 */
 .pr-clone-name { min-width: 0; white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
 .pr-clone-elapsed {
-  flex: 0 0 auto; margin-left: 3px; font-size: 9px; line-height: 1;
+  flex: 0 0 auto; margin-left: 3px; font-size: calc(9px + var(--dsh-content-font-delta, 0px)); line-height: 1;
   font-variant-numeric: tabular-nums;
   color: var(--dsw-alias-state-success-primary);
 }
@@ -347,31 +347,31 @@ window.__ModuleLoader__.load({
   position: fixed; z-index: 1000; min-width: 168px; padding: 4px;
   border-radius: 8px; border: 1px solid var(--dsw-alias-border-l2);
   background: var(--dsw-alias-bg-layer-2); box-shadow: 0 12px 32px rgba(0,0,0,.45);
-  font-size: 12px;
+  font-size: calc(12px + var(--dsh-content-font-delta, 0px));
 }
 .pr-menu-item {
   display: block; width: 100%; text-align: left; padding: 5px 8px; border: none; border-radius: 5px;
-  background: transparent; color: var(--dsw-alias-label-primary); font: inherit; font-size: 12px; cursor: pointer;
+  background: transparent; color: var(--dsw-alias-label-primary); font: inherit; font-size: calc(12px + var(--dsh-content-font-delta, 0px)); cursor: pointer;
 }
 .pr-menu-item:hover { background: var(--dsw-alias-bg-layer-1); }
-.pr-menu-msg { padding: 4px 8px; font-size: 10.5px; color: var(--dsw-alias-label-secondary); }
+.pr-menu-msg { padding: 4px 8px; font-size: calc(10.5px + var(--dsh-content-font-delta, 0px)); color: var(--dsw-alias-label-secondary); }
 .pr-modal { position: fixed; inset: 0; z-index: 1001; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.45); }
-.pr-modal-box { width: min(420px, 88vw); padding: 14px; border-radius: 10px; background: var(--dsw-alias-bg-base); border: 1px solid var(--dsw-alias-border-l2); }
-.pr-modal-title { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
-.pr-modal-input { width: 100%; box-sizing: border-box; height: 30px; padding: 0 8px; border-radius: 6px; border: 1px solid var(--dsw-alias-border-l1); background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-primary); font-size: 12.5px; outline: none; }
+.pr-modal-box { width: min(420px, 88vw); padding: 14px; border-radius: 10px; background-color: #141a1b; background-image: linear-gradient(var(--dsw-alias-bg-base), var(--dsw-alias-bg-base)); border: 1px solid var(--dsw-alias-border-l2); box-shadow: 0 18px 48px rgba(0,0,0,.5); }
+.pr-modal-title { font-size: calc(13px + var(--dsh-content-font-delta, 0px)); font-weight: 600; margin-bottom: 8px; }
+.pr-modal-input { width: 100%; box-sizing: border-box; height: 30px; padding: 0 8px; border-radius: 6px; border: 1px solid var(--dsw-alias-border-l1); background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-primary); font-size: calc(12.5px + var(--dsh-content-font-delta, 0px)); outline: none; }
 .pr-modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
 /* 头部「+ 新项目」按钮 */
 .pr-new-btn {
   flex: 0 0 auto; height: 18px; padding: 0 6px; border-radius: 5px;
   border: 1px solid var(--dsw-alias-border-l1); background: transparent;
-  color: var(--dsw-alias-label-secondary); font-size: 10px; line-height: 1; cursor: pointer;
+  color: var(--dsw-alias-label-secondary); font-size: calc(10px + var(--dsh-content-font-delta, 0px)); line-height: 1; cursor: pointer;
 }
 .pr-new-btn:hover { background: var(--dsw-alias-bg-layer-2); color: var(--dsw-alias-label-primary); }
 /* 房间关闭按钮：显式带文字，避免全屏遮罩下只剩一个小图标找不着 */
 .pr-close-btn {
   flex: 0 0 auto; height: 22px; padding: 0 10px; border-radius: 6px;
   border: 1px solid var(--dsw-alias-border-l2); background: var(--dsw-alias-bg-layer-2);
-  color: var(--dsw-alias-label-primary); font-size: 11.5px; line-height: 1; cursor: pointer;
+  color: var(--dsw-alias-label-primary); font-size: calc(11.5px + var(--dsh-content-font-delta, 0px)); line-height: 1; cursor: pointer;
 }
 .pr-close-btn:hover { border-color: var(--dsw-alias-brand-primary); }
 /* 一页三段布局 */
@@ -396,11 +396,11 @@ window.__ModuleLoader__.load({
 .pr-section { margin-bottom: 16px; }
 .pr-section:last-child { margin-bottom: 4px; }
 .pr-section-title {
-  font-size: 11px; font-weight: 700; letter-spacing: .06em;
+  font-size: calc(11px + var(--dsh-content-font-delta, 0px)); font-weight: 700; letter-spacing: .06em;
   color: var(--dsw-alias-label-secondary); text-transform: uppercase;
   margin-bottom: 6px;
 }
-.pr-loose-msg { font-size: 10px; color: var(--dsw-alias-label-secondary); padding: 0 6px 6px; line-height: 1.5; flex: 0 0 auto; }
+.pr-loose-msg { font-size: calc(10px + var(--dsh-content-font-delta, 0px)); color: var(--dsw-alias-label-secondary); padding: 0 6px 6px; line-height: 1.5; flex: 0 0 auto; }
 
 /* 运行中快捷栏（对齐 AI-Agent-Hub）：两段竖排 —— 上「运行中」、下「完成未读」 */
 .pr-runbar { display: flex; flex-direction: column; gap: 4px; padding: 2px 4px 6px; flex: 0 0 auto; min-width: 0; }
@@ -413,7 +413,7 @@ window.__ModuleLoader__.load({
 }
 .pr-runbar-sec-title {
   display: flex; align-items: center; gap: 4px; min-width: 0;
-  padding: 0 2px; font-size: 9px; line-height: 1.4;
+  padding: 0 2px; font-size: calc(9px + var(--dsh-content-font-delta, 0px)); line-height: 1.4;
   color: var(--dsw-alias-label-secondary); letter-spacing: .03em;
 }
 .pr-runbar-sec[data-kind="done"] .pr-runbar-sec-title { color: #d97757; }
@@ -425,7 +425,7 @@ window.__ModuleLoader__.load({
   width: 10px; height: 10px; border-radius: 50%; flex: 0 0 auto;
   display: inline-flex; align-items: center; justify-content: center;
   background: #d97757; color: #fff;
-  font-size: 8px; font-weight: 700; line-height: 1;
+  font-size: calc(8px + var(--dsh-content-font-delta, 0px)); font-weight: 700; line-height: 1;
 }
 .pr-runbar-sec-label { flex: 0 0 auto; white-space: nowrap; }
 .pr-runbar-sec-count {
@@ -436,12 +436,12 @@ window.__ModuleLoader__.load({
    子行样式与侧栏芯片的 pr-clone-row / pr-tree-rail 完全一致。 */
 .pr-run-wrap { display: inline-flex; flex-direction: column; gap: 1px; align-items: flex-start; }
 .pr-run-clones { display: flex; flex-direction: column; gap: 1px; padding-left: 6px; margin: 0 0 1px; }
-.pr-run-clones .pr-clone-row { font-size: 9px; line-height: 1.4; }
+.pr-run-clones .pr-clone-row { font-size: calc(9px + var(--dsh-content-font-delta, 0px)); line-height: 1.4; }
 .pr-readall {
   /* 2026-11-11：一键已读搬进「完成未读」区的小标题里，靠右对齐 */
   flex: 0 0 auto; margin: 0 0 0 auto; padding: 1px 6px; border-radius: 8px;
   border: 1px solid var(--dsw-alias-border-l1); background: transparent;
-  color: #d97757; font-size: 9.5px; line-height: 1.4;
+  color: #d97757; font-size: calc(9.5px + var(--dsh-content-font-delta, 0px)); line-height: 1.4;
   white-space: nowrap; cursor: pointer;
 }
 .pr-readall:hover { background: var(--dsw-alias-bg-layer-2); }
@@ -451,7 +451,7 @@ window.__ModuleLoader__.load({
   min-height: 20px; padding: 2px 7px 2px 3px; border-radius: 11px;
   border: 1px solid transparent; background: transparent;
   color: var(--dsw-alias-label-secondary);
-  font: inherit; font-size: 11.5px; line-height: 1.2; white-space: nowrap; cursor: pointer;
+  font: inherit; font-size: calc(11.5px + var(--dsh-content-font-delta, 0px)); line-height: 1.2; white-space: nowrap; cursor: pointer;
 }
 .pr-run-pill:hover { background: var(--dsw-alias-bg-layer-1); }
 .pr-run-pill[data-active="1"] {
@@ -462,28 +462,28 @@ window.__ModuleLoader__.load({
 .pr-run-avatar { width: 16px; height: 16px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; line-height: 1; }
 .pr-run-project { display: inline-flex; align-items: center; gap: 3px; flex: 0 0 auto; min-width: 0; }
 .pr-run-project-dot { width: 6px; height: 6px; border-radius: 2px; flex: 0 0 auto; }
-.pr-run-project-name { font-size: 9px; line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pr-run-project-name { font-size: calc(9px + var(--dsh-content-font-delta, 0px)); line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; }
 /* 2026-11-09 用户令「标题要显示全」：快捷栏 pill 名字原来 nowrap+ellipsis 会被吃掉，改为可换行。 */
 .pr-run-name { min-width: 0; flex: 0 1 auto; white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
 .pr-run-badge {
   flex: 0 0 auto; min-width: 14px; height: 14px; padding: 0 3px; border-radius: 7px;
   display: inline-flex; align-items: center; justify-content: center;
   background: var(--dsw-alias-bg-layer-2); color: var(--dsw-alias-label-secondary);
-  font-size: 9px; line-height: 1; font-variant-numeric: tabular-nums;
+  font-size: calc(9px + var(--dsh-content-font-delta, 0px)); line-height: 1; font-variant-numeric: tabular-nums;
 }
-.pr-run-done { display: inline-flex; align-items: center; gap: 3px; flex: 0 0 auto; font-size: 9px; line-height: 1; color: var(--dsw-alias-brand-primary); }
+.pr-run-done { display: inline-flex; align-items: center; gap: 3px; flex: 0 0 auto; font-size: calc(9px + var(--dsh-content-font-delta, 0px)); line-height: 1; color: var(--dsw-alias-brand-primary); }
 .pr-run-check {
   width: 10px; height: 10px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
-  background: #d97757; color: #fff; font-size: 8px; font-weight: 700; line-height: 1;
+  background: #d97757; color: #fff; font-size: calc(8px + var(--dsh-content-font-delta, 0px)); font-weight: 700; line-height: 1;
 }
-.pr-run-elapsed { flex: 0 0 auto; font-size: 9px; line-height: 1; font-variant-numeric: tabular-nums; color: var(--dsw-alias-state-success-primary); }
+.pr-run-elapsed { flex: 0 0 auto; font-size: calc(9px + var(--dsh-content-font-delta, 0px)); line-height: 1; font-variant-numeric: tabular-nums; color: var(--dsw-alias-state-success-primary); }
 
 /* 项目行：22px 紧凑行高 + 顶部细线，读起来像「项目」而不是一行会话 */
 .pr-proj {
   display: flex; align-items: center; gap: 6px;
   height: 22px; min-height: 22px; padding: 0 6px;
   margin-top: 6px; border-radius: 6px;
-  font-size: 12px; font-weight: 600;
+  font-size: calc(12px + var(--dsh-content-font-delta, 0px)); font-weight: 600;
   box-shadow: inset 0 1px 0 var(--dsw-alias-border-l1);
   cursor: pointer; overflow: hidden;
 }
@@ -492,11 +492,11 @@ window.__ModuleLoader__.load({
 .pr-dot { width: 6px; height: 6px; border-radius: 2px; flex: 0 0 auto; }
 .pr-proj-name { flex: 0 1 auto; max-width: 100%; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pr-spacer { flex: 1 1 auto; min-width: 4px; }
-.pr-meta { font-size: 10px; font-weight: 500; color: var(--dsw-alias-label-secondary); flex: 0 0 auto; font-variant-numeric: tabular-nums; }
+.pr-meta { font-size: calc(10px + var(--dsh-content-font-delta, 0px)); font-weight: 500; color: var(--dsw-alias-label-secondary); flex: 0 0 auto; font-variant-numeric: tabular-nums; }
 .pr-icon-btn {
   width: 18px; height: 18px; flex: 0 0 auto; border: none; padding: 0; border-radius: 5px;
   background: transparent; color: var(--dsw-alias-label-secondary);
-  cursor: pointer; font-size: 10px; line-height: 1;
+  cursor: pointer; font-size: calc(10px + var(--dsh-content-font-delta, 0px)); line-height: 1;
 }
 .pr-icon-btn:hover { background: var(--dsw-alias-bg-layer-2); color: var(--dsw-alias-label-primary); }
 /* 图钉：默认隐藏，悬停显形；已置顶常显 */
@@ -519,7 +519,7 @@ window.__ModuleLoader__.load({
   padding: 0; border-radius: 11px;
   border: 1px solid transparent; background: transparent;
   color: var(--dsw-alias-label-secondary);
-  font: inherit; font-size: 11.5px; line-height: 1.2;
+  font: inherit; font-size: calc(11.5px + var(--dsh-content-font-delta, 0px)); line-height: 1.2;
   cursor: pointer; box-sizing: border-box; overflow-wrap: anywhere;
 }
 /* 本体那一行（头像 + 名字 + badge + 圆点 + 时长）：单独成盒，选中背景只作用在它上面 */
@@ -579,25 +579,25 @@ window.__ModuleLoader__.load({
   100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 transparent; }
 }
 .pr-running-dot { width: 6px; height: 6px; border-radius: 50%; flex: 0 0 auto; background: var(--dsw-alias-state-success-primary); animation: pr-pulse 1.4s ease-in-out infinite; }
-.pr-empty { padding: 10px 8px; font-size: 11px; color: var(--dsw-alias-label-secondary); text-align: center; }
+.pr-empty { padding: 10px 8px; font-size: calc(11px + var(--dsh-content-font-delta, 0px)); color: var(--dsw-alias-label-secondary); text-align: center; }
 
 /* 房间浮层 */
 .pr-overlay { position: fixed; z-index: 900; display: flex; flex-direction: column; background: var(--dsw-alias-bg-base); border-left: 1px solid var(--dsw-alias-border-l1); }
 .pr-panel { width: 100%; height: 100%; display: flex; flex-direction: column; background: var(--dsw-alias-bg-base); }
 .pr-panel-head { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--dsw-alias-border-l1); }
-.pr-panel-title { font-size: 13px; font-weight: 700; }/* 2026-11-10 用户令「群聊页字体太大」：14px→13px，与分区标题/正文一起收一档 */
+.pr-panel-title { font-size: calc(13px + var(--dsh-content-font-delta, 0px)); font-weight: 700; }/* 2026-11-10 用户令「群聊页字体太大」：14px→13px，与分区标题/正文一起收一档 */
 .pr-tabs { display: flex; gap: 2px; margin-left: 10px; }
-.pr-tab { padding: 3px 10px; border-radius: 6px; border: none; background: transparent; color: var(--dsw-alias-label-secondary); font-size: 12px; cursor: pointer; }
+.pr-tab { padding: 3px 10px; border-radius: 6px; border: none; background: transparent; color: var(--dsw-alias-label-secondary); font-size: calc(12px + var(--dsh-content-font-delta, 0px)); cursor: pointer; }
 .pr-tab.on { background: var(--dsw-alias-bg-layer-2); color: var(--dsw-alias-label-primary); font-weight: 600; }
 .pr-panel-body { flex: 1; min-height: 0; overflow: hidden; padding: 12px 14px; display: flex; flex-direction: column; }
 .pr-panel-foot { border-top: 1px solid var(--dsw-alias-border-l1); padding: 8px 14px; display: flex; gap: 8px; align-items: flex-end; }
-.pr-textarea { flex: 1; min-height: 34px; max-height: 120px; resize: vertical; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--dsw-alias-border-l1); background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-primary); font-size: 12px; font-family: inherit; outline: none; }
-.pr-btn { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--dsw-alias-border-l2); background: var(--dsw-alias-bg-layer-2); color: var(--dsw-alias-label-primary); font-size: 12px; cursor: pointer; white-space: nowrap; }
+.pr-textarea { flex: 1; min-height: 34px; max-height: 120px; resize: vertical; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--dsw-alias-border-l1); background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-primary); font-size: calc(12px + var(--dsh-content-font-delta, 0px)); font-family: inherit; outline: none; }
+.pr-btn { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--dsw-alias-border-l2); background: var(--dsw-alias-bg-layer-2); color: var(--dsw-alias-label-primary); font-size: calc(12px + var(--dsh-content-font-delta, 0px)); cursor: pointer; white-space: nowrap; }
 .pr-btn:hover { border-color: var(--dsw-alias-brand-primary); }
 .pr-btn.primary { background: var(--dsw-alias-brand-primary); border-color: var(--dsw-alias-brand-primary); color: #08111a; font-weight: 600; }
 .pr-btn:disabled { opacity: .5; cursor: default; }
-.pr-board { width: 100%; min-height: 200px; resize: vertical; padding: 10px; border-radius: 8px; border: 1px solid var(--dsw-alias-border-l1); background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-primary); font-size: 12.5px; line-height: 1.6; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; outline: none; }
-.pr-todo { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px dashed var(--dsw-alias-border-l1); font-size: 12.5px; }
+.pr-board { width: 100%; min-height: 200px; resize: vertical; padding: 10px; border-radius: 8px; border: 1px solid var(--dsw-alias-border-l1); background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-primary); font-size: calc(12.5px + var(--dsh-content-font-delta, 0px)); line-height: 1.6; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; outline: none; }
+.pr-todo { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px dashed var(--dsw-alias-border-l1); font-size: calc(12.5px + var(--dsh-content-font-delta, 0px)); }
 .pr-todo input[type=checkbox] { flex: 0 0 auto; }
 .pr-todo-text { flex: 1; min-width: 0; }
 .pr-todo.done .pr-todo-text { text-decoration: line-through; opacity: .55; }
@@ -619,7 +619,7 @@ window.__ModuleLoader__.load({
   display: flex; align-items: flex-start; gap: 5px; padding: 5px 8px;
   border-bottom: 1px solid var(--dsw-alias-border-l1);
   background: var(--dsw-alias-bg-layer-2);
-  font-size: 11.5px; font-weight: 600;/* 2026-11-09 用户令：lane 标题完整显示 */
+  font-size: calc(11.5px + var(--dsh-content-font-delta, 0px)); font-weight: 600;/* 2026-11-09 用户令：lane 标题完整显示 */
 }
 /* ⚠️ 2026-11-10 补回上面这条规则的收尾花括号：58ca983 改 lane 标题换行时把块尾的 } 弄丢了，
    浏览器（Chrome 120+ 支持 CSS 嵌套）会把 .pr-lane-name 之后的**全部规则**当成
@@ -629,7 +629,7 @@ window.__ModuleLoader__.load({
 .pr-lane-archive {
   margin-left: auto; flex: 0 0 auto; height: 18px; padding: 0 6px; border-radius: 5px;
   border: 1px solid transparent; background: transparent;
-  color: var(--dsw-alias-label-secondary); font-size: 10px; line-height: 1; cursor: pointer;
+  color: var(--dsw-alias-label-secondary); font-size: calc(10px + var(--dsh-content-font-delta, 0px)); line-height: 1; cursor: pointer;
 }
 .pr-lane-archive:hover {
   border-color: var(--dsw-alias-border-l2); background: var(--dsw-alias-bg-layer-1);
@@ -637,13 +637,13 @@ window.__ModuleLoader__.load({
 }
 .pr-lane-dot { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; }
 .pr-lane-sub {
-  padding: 0 8px 4px; font-size: 9.5px; color: var(--dsw-alias-label-secondary);
+  padding: 0 8px 4px; font-size: calc(9.5px + var(--dsh-content-font-delta, 0px)); color: var(--dsw-alias-label-secondary);
   border-bottom: 1px solid var(--dsw-alias-border-l1);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .pr-lane-body { flex: 1; min-height: 90px; max-height: 210px; overflow-y: auto; padding: 6px; display: flex; flex-direction: column; gap: 5px; }
 .pr-lane-msg {
-  font-size: 11px; line-height: 1.4; color: var(--dsw-alias-label-primary);
+  font-size: calc(11px + var(--dsh-content-font-delta, 0px)); line-height: 1.4; color: var(--dsw-alias-label-primary);
   background: var(--dsw-alias-bg-base); border-radius: 6px; padding: 4px 6px;
   display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
   white-space: pre-wrap; word-break: break-word;
@@ -656,25 +656,25 @@ window.__ModuleLoader__.load({
 /* 看板：渲染视图（纵向滚动）+ 编辑切换 */
 .pr-board-section { display: flex; flex-direction: column; min-height: 0; }
 .pr-section-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-.pr-board-toggle { height: 22px; padding: 0 9px; font-size: 11px; }
+.pr-board-toggle { height: 22px; padding: 0 9px; font-size: calc(11px + var(--dsh-content-font-delta, 0px)); }
 .pr-board-count {
-  margin-left: auto; font-size: 10px; color: var(--dsw-alias-label-secondary);
+  margin-left: auto; font-size: calc(10px + var(--dsh-content-font-delta, 0px)); color: var(--dsw-alias-label-secondary);
   font-variant-numeric: tabular-nums; white-space: nowrap;
 }
 .pr-md-view {
   flex: 1; min-height: 120px; max-height: 42vh; overflow-y: auto;
   padding: 8px 10px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 8px;
-  background: var(--dsw-alias-bg-layer-1); font-size: 12px; line-height: 1.55;
+  background: var(--dsw-alias-bg-layer-1); font-size: calc(12px + var(--dsh-content-font-delta, 0px)); line-height: 1.55;
   word-break: break-word;
 }
-.pr-md-h { margin: 6px 0 4px; font-size: 12.5px; font-weight: 700; color: var(--dsw-alias-label-primary); }
+.pr-md-h { margin: 6px 0 4px; font-size: calc(12.5px + var(--dsh-content-font-delta, 0px)); font-weight: 700; color: var(--dsw-alias-label-primary); }
 .pr-md-h:first-child { margin-top: 0; }
 .pr-md-p { margin: 2px 0; color: var(--dsw-alias-label-primary); white-space: pre-wrap; }
 .pr-md-ul { margin: 3px 0; padding-left: 16px; }
 .pr-md-ul li { margin: 1px 0; }
 .pr-md-code {
   padding: 0 4px; border-radius: 4px; background: var(--dsw-alias-bg-layer-2);
-  font-size: 11px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: calc(11px + var(--dsh-content-font-delta, 0px)); font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 .pr-board-edit { min-height: 200px; max-height: 42vh; }
 .pr-board-actions { display: flex; gap: 8px; margin-top: 6px; align-items: center; }
@@ -700,10 +700,10 @@ window.__ModuleLoader__.load({
   overflow-wrap: anywhere;
   text-overflow: clip;
 }
-.pr-hint { font-size: 11px; color: var(--dsw-alias-label-secondary); padding: 6px 0; }
-.pr-err { font-size: 11.5px; color: #f87171; padding: 4px 0; }
+.pr-hint { font-size: calc(11px + var(--dsh-content-font-delta, 0px)); color: var(--dsw-alias-label-secondary); padding: 6px 0; }
+.pr-err { font-size: calc(11.5px + var(--dsh-content-font-delta, 0px)); color: #f87171; padding: 4px 0; }
 .pr-send-row { display: flex; gap: 6px; align-items: center; width: 100%; }
-.pr-select { max-width: 200px; height: 30px; padding: 0 6px; border-radius: 6px; border: 1px solid var(--dsw-alias-border-l1); background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-primary); font-size: 12px; }
+.pr-select { max-width: 200px; height: 30px; padding: 0 6px; border-radius: 6px; border: 1px solid var(--dsw-alias-border-l1); background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-primary); font-size: calc(12px + var(--dsh-content-font-delta, 0px)); }
 `;
 
     function ensureStyle() {
@@ -911,6 +911,31 @@ function summarizeMessage(raw) {
         try { window.localStorage.removeItem(HIDDEN_KEY); } catch (error) { /* ignore */ }
       }, []);
 
+      // ── 幽灵会话「直接删除」（2026-11-12 用户令「这些幽灵对话就不能直接删掉吗」）──────
+      // 删除 = 从隐藏集移除 + 记一条极简墓碑。为什么删了还要墓碑：幽灵只活在前端快照里
+      // （磁盘目录早没了），清掉隐藏集后若快照仍残留这个 id，侧栏就会再冒出来一条点开报
+      // not-found 的行。墓碑让「删掉的永不显示」，且**不计入**「已隐藏」数量——
+      // 用户要看到的是数量清零，而不是换个名字继续挂在那里。
+      // 只删「磁盘上已不存在」的（判据是 /project-room/alive），磁盘上还有目录的一律不动。
+      const PURGED_KEY = 'project-room:purged-sessions';
+      const [purgedIds, setPurgedIds] = React.useState(() => {
+        try {
+          const raw = window.localStorage.getItem(PURGED_KEY);
+          const arr = raw ? JSON.parse(raw) : [];
+          return new Set(Array.isArray(arr) ? arr.map(bareId) : []);
+        } catch (error) { return new Set(); }
+      });
+      const markPurged = React.useCallback((ids) => {
+        const clean = (Array.isArray(ids) ? ids : [ids]).map(bareId).filter(Boolean);
+        if (!clean.length) return;
+        setPurgedIds((prev) => {
+          const next = new Set(prev);
+          for (const id of clean) next.add(id);
+          try { window.localStorage.setItem(PURGED_KEY, JSON.stringify([...next])); } catch (error) { /* ignore */ }
+          return next;
+        });
+      }, []);
+
       // 1s 心跳：驱动「今日运行时长」与相对时间
       React.useEffect(() => {
         const timer = setInterval(() => setTick(Date.now()), 1000);
@@ -924,11 +949,17 @@ function summarizeMessage(raw) {
       const groups = React.useMemo(() => {
         const map = new Map();
         for (const [id, session] of Object.entries(byId)) {
-          if (!session || session.blank) continue;
+          if (!session) continue;
+          // 2026-11-12：blank 会话原本一律不显示。但「+ 新项目」刚建出来的会话在首轮对话前
+          // 就是 blank，标题已是「项目 · 成员」——一并过滤会让新项目在侧栏彻底看不见
+          // （用户报「新项目建不了，没反应」）。所以 blank 只过滤**还没被命名**的空壳。
+          if (session.blank && !projectOfTitle(session.displayTitle || session.title)) continue;
           if (archived.has(String(id))) continue;
           // 2026-11-10（用户令）：白名单改「事后隐藏」——只跳过**归档失败过**的会话，
           // 不再用磁盘白名单全量过滤（那样会让新建会话因轮询延迟而整段生命期不可见）。
           if (hiddenIds.has(bareId(id))) continue;
+          // 已删除的幽灵：墓碑常驻，即使前端快照还残留这个 id 也不再渲染（2026-11-12）
+          if (purgedIds.has(bareId(id))) continue;
           const parsed = projectOfTitle(session.displayTitle || session.title);
           const project = parsed ? parsed.project : LOOSE_GROUP;
           const member = parsed ? parsed.member : (session.displayTitle || session.title || String(id).slice(-6));
@@ -950,7 +981,7 @@ function summarizeMessage(raw) {
           });
         }
         return map;
-      }, [byId, archived, hiddenIds]);
+      }, [byId, archived, hiddenIds, purgedIds]);
 
       // 空闲时长补全（2026-11-09）：对还没有 lastActive 的会话拉 /hub/session-events?limit=1
     // 取最后一条事件的 time。分身（标题带｜）优先——用户最常盯的就是分身行。
@@ -1384,48 +1415,164 @@ function summarizeMessage(raw) {
       /** 设置：项目管理者名称（默认 Yat2，存 localStorage） */
       const renderSettings = () => {
         if (!settings) return null;
-        const save = () => {
+        /**
+         * 改名（2026-11-12 用户令「设置里面重命名之后所有管理者应该都重命名呀」）：
+         * 以前只写 localStorage，已有会话标题仍带旧名 → 排序/房间投递按新名匹配不到，
+         * 管理者看着像「消失了」。现在改名后把所有 `<项目> · <旧名>` 的会话一并改成新名。
+         */
+        const save = async () => {
           const name = String(settings.manager || '').trim();
           if (!name) { setSettings({ ...settings, msg: '名称不能为空' }); return; }
+          const oldName = managerName();
           try { window.localStorage.setItem('projectRoom.managerName', name); } catch { /* 存不了就本次生效 */ }
-          setSettings(null);
+          if (name === oldName) { setSettings(null); return; }
+
+          // 找出所有「某项目 · 旧管理者名」的会话，逐个改标题
+          const targets = [];
+          for (const [id, session] of Object.entries(byId)) {
+            if (!session) continue;
+            const title = String(session.displayTitle || session.title || '');
+            const parsed = projectOfTitle(title);
+            if (!parsed) continue;
+            if (parsed.member !== oldName) continue;
+            targets.push({ id, project: parsed.project });
+          }
+          if (!targets.length) { setSettings(null); return; }
+
+          setSettings({ ...settings, busy: true, msg: `正在把 ${targets.length} 个管理者会话改名为「${name}」…` });
+          let ok = 0;
+          const failed = [];
+          for (const t of targets) {
+            try {
+              const res = await fetch(`${API}/rename`, {
+                method: 'POST', headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ sessionId: t.id, title: `${t.project}${SEP}${name}` }),
+              });
+              const data = await res.json();
+              // 坑：/project-room/rename 失败也返回 HTTP 200 + {ok:false}，只看 res.ok 会漏判
+              if (data && data.ok) ok += 1; else failed.push(`${t.project}（${(data && data.error) || '未知'}）`);
+            } catch (error) {
+              failed.push(`${t.project}（${String((error && error.message) || error)}）`);
+            }
+          }
+          if (!failed.length) { setSettings(null); return; }
+          setSettings({
+            ...settings, busy: false,
+            msg: `已改名 ${ok} 个；失败 ${failed.length} 个：${failed.slice(0, 3).join('、')}${failed.length > 3 ? '…' : ''}`,
+          });
+        };
+        /**
+         * 删除幽灵会话（2026-11-12 用户令「这些幽灵对话就不能直接删掉吗」）：
+         * 只删「磁盘上已不存在」的隐藏会话，判据 = /alive 的磁盘目录清单。
+         *   ① 先记墓碑（后面请求失败也不会再冒出它）
+         *   ② 从隐藏集移除（磁盘上还有目录的保留）
+         *   ③ 请 Host 摘掉归档记录 + 残留缓存（服务端按磁盘再核一遍）
+         * 两段式确认：桌面端 window.confirm 可能被静默拦掉（与「清理未分组」同因）。
+         */
+        const purgeGhosts = async () => {
+          if (!settings.purgeArmed) {
+            setSettings({
+              ...settings, purgeArmed: true,
+              msg: `再点一次「确认删除」→ 只删磁盘上已不存在的 ${hiddenIds.size} 个（4 秒后自动取消）`,
+            });
+            setTimeout(() => setSettings((cur) => (cur && cur.purgeArmed ? { ...cur, purgeArmed: false, msg: '' } : cur)), 4000);
+            return;
+          }
+          setSettings({ ...settings, purgeArmed: false, busy: true, msg: '正在核对磁盘上的会话…' });
+          let alive = null;
+          try {
+            const res = await fetch(`${API}/alive`);
+            const data = await res.json();
+            alive = new Set(((data && data.ids) || []).map(bareId));
+          } catch (error) {
+            setSettings({ ...settings, busy: false, msg: `核对失败，没有删任何东西：${String((error && error.message) || error)}` });
+            return;
+          }
+          const all = [...hiddenIds];
+          const ghosts = all.filter((id) => !alive.has(bareId(id)));
+          const kept = all.filter((id) => alive.has(bareId(id)));
+          if (!ghosts.length) {
+            setSettings({ ...settings, busy: false, msg: '没有可删除的幽灵会话（隐藏的都还在磁盘上）' });
+            return;
+          }
+          markPurged(ghosts);
+          setHiddenIds(new Set(kept));
+          try {
+            if (kept.length) window.localStorage.setItem(HIDDEN_KEY, JSON.stringify(kept));
+            else window.localStorage.removeItem(HIDDEN_KEY);
+          } catch (error) { /* ignore */ }
+          let archivedRemoved = 0;
+          try {
+            const res = await fetch(`${API}/purge-sessions`, {
+              method: 'POST', headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({ sessionIds: ghosts }),
+            });
+            const data = await res.json();
+            if (data && data.ok) archivedRemoved = Number(data.archivedRemoved) || 0;
+          } catch (error) { /* 归档记录清不掉也不影响侧栏：墓碑已生效 */ }
+          setSettings({
+            ...settings, busy: false,
+            msg: `已删除 ${ghosts.length} 个幽灵会话${archivedRemoved ? `（含 ${archivedRemoved} 条归档记录）` : ''}${kept.length ? `；跳过 ${kept.length} 个（磁盘上仍存在）` : ''}`,
+          });
         };
         return h('div', { className: 'pr-modal', onClick: () => setSettings(null) },
           h('div', { className: 'pr-modal-box', onClick: (event) => event.stopPropagation() },
             h('div', { className: 'pr-modal-title' }, '设置'),
-            h('div', { className: 'pr-hint' }, '项目管理者名称（排序时永远排第一、新建项目的默认成员名）'),
+            h('div', { className: 'pr-hint' }, '管理者名（每个项目排第一、新建项目的默认成员名；改名会把所有管理者会话一并改名）'),
             h('input', {
               className: 'pr-modal-input',
               value: settings.manager || '',
               autoFocus: true,
               placeholder: DEFAULT_MANAGER,
+              disabled: Boolean(settings.busy),
               onChange: (event) => setSettings({ ...settings, manager: event.target.value, msg: '' }),
               onKeyDown: (event) => { if (event.key === 'Enter') save(); if (event.key === 'Escape') setSettings(null); },
             }),
             h('div', { className: 'pr-hint', style: { marginTop: '6px' } },
-              '注意：这只影响本插件的排序与默认名。若要让「管理者协议注入」也认这个名字，'
-              + '还需要改 hub-desktop-ui 里的 MANAGER_NAMES（那是另一个插件的硬编码）。'),
+              '提示：改名只影响侧栏的排序、新建项目默认名与会话标题，DSH 里既有的会话标题会同步改。'),
             settings.msg ? h('div', { className: 'pr-err' }, settings.msg) : null,
-      // 2026-11-10（用户令「事后隐藏」）：归档失败过的会话被记进 localStorage 隐藏集，
-      // 这里提供恢复入口，免得误隐藏之后找不回来。
+      // 2026-11-10（用户令「事后隐藏」）：归档失败过的会话被记进 localStorage 隐藏集。
+      // 2026-11-12（用户令「这些幽灵对话就不能直接删掉吗」）：这里补「删除」——
+      // 「恢复」只是让它们重新出现（点开必报 session/not-found），「删除」才是用户要的。
       h('div', { className: 'pr-hint', style: { marginTop: '10px' } },
         `已隐藏的会话：${hiddenIds.size} 个`),
-      h('button', {
-        type: 'button',
-        disabled: hiddenIds.size === 0,
-        style: {
-          marginTop: '4px', padding: '4px 10px', borderRadius: '6px', fontSize: '11px',
-          border: '1px solid var(--dsw-alias-border-secondary, #3a3a42)',
-          background: 'transparent', color: 'inherit',
-          cursor: hiddenIds.size === 0 ? 'default' : 'pointer',
-          opacity: hiddenIds.size === 0 ? 0.45 : 1,
-        },
-        onClick: () => { unhideAll(); setSettings({ ...settings, msg: '已恢复全部隐藏的会话' }); },
-      }, '恢复全部隐藏的会话'),
-      h('div', { className: 'pr-hint', style: { fontSize: '10px' } },
-        '（这些是归档时报 no such session 的幽灵会话，磁盘上已不存在；恢复后会重新出现在侧栏）'),
+      h('div', { style: { display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '4px' } },
+        h('button', {
+          type: 'button',
+          disabled: hiddenIds.size === 0 || Boolean(settings.busy),
+          style: {
+            padding: '4px 10px', borderRadius: '6px',
+            fontSize: 'calc(11px + var(--dsh-content-font-delta, 0px))',
+            border: '1px solid var(--dsw-alias-border-secondary, #3a3a42)',
+            background: 'transparent', color: 'inherit',
+            cursor: hiddenIds.size === 0 ? 'default' : 'pointer',
+            opacity: hiddenIds.size === 0 ? 0.45 : 1,
+          },
+          onClick: () => { unhideAll(); setSettings({ ...settings, purgeArmed: false, msg: '已恢复全部隐藏的会话' }); },
+        }, '恢复全部隐藏的会话'),
+        h('button', {
+          type: 'button',
+          disabled: hiddenIds.size === 0 || Boolean(settings.busy),
+          style: {
+            padding: '4px 10px', borderRadius: '6px',
+            fontSize: 'calc(11px + var(--dsh-content-font-delta, 0px))',
+            border: `1px solid ${settings.purgeArmed ? '#f87171' : 'var(--dsw-alias-border-secondary, #3a3a42)'}`,
+            background: settings.purgeArmed ? 'rgba(248, 113, 113, 0.16)' : 'transparent',
+            color: settings.purgeArmed ? '#f87171' : 'inherit',
+            cursor: hiddenIds.size === 0 ? 'default' : 'pointer',
+            opacity: hiddenIds.size === 0 ? 0.45 : 1,
+          },
+          onClick: purgeGhosts,
+        }, settings.purgeArmed ? '确认删除幽灵会话' : '删除幽灵会话'),
+      ),
+      h('div', { className: 'pr-hint', style: { fontSize: 'calc(10px + var(--dsh-content-font-delta, 0px))' } },
+        '（这些是归档时报 no such session 的幽灵会话，磁盘上已不存在：点「删除」彻底移除，点「恢复」只会让它们重新出现在侧栏）'),
+      purgedIds.size
+        ? h('div', { className: 'pr-hint', style: { fontSize: 'calc(10px + var(--dsh-content-font-delta, 0px))' } },
+            `已删除的幽灵会话：${purgedIds.size} 个（不会再显示）`)
+        : null,
       h('div', { className: 'pr-hint', style: { marginTop: '10px' } }, '显示'),
-      h('label', { style: { display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', cursor: 'pointer', padding: '3px 0' } },
+      h('label', { style: { display: 'flex', alignItems: 'center', gap: '6px', fontSize: 'calc(11px + var(--dsh-content-font-delta, 0px))', cursor: 'pointer', padding: '3px 0' } },
         h('input', {
           type: 'checkbox',
           checked: showIdleAgo,
@@ -1436,7 +1583,7 @@ function summarizeMessage(raw) {
         }),
         h('span', null, '显示「多久前运行 / 距上次活动」'),
       ),
-      h('div', { className: 'pr-hint', style: { fontSize: '10px' } },
+      h('div', { className: 'pr-hint', style: { fontSize: 'calc(10px + var(--dsh-content-font-delta, 0px))' } },
         '关闭后空闲项不再显示相对时间，运行中仍显示本轮已运行时长。'),
             h('div', { className: 'pr-modal-actions' },
               h('button', { className: 'pr-btn', onClick: () => setSettings(null) }, '取消'),
@@ -1452,7 +1599,8 @@ function summarizeMessage(raw) {
         const submit = async () => {
           const project = String(newProject.name || '').trim();
           const member = String(newProject.member || managerName()).trim() || managerName();
-          if (!project) return;
+          // 2026-11-12：空项目名原来直接 return，点「创建」毫无反馈（用户报「没反应」）。
+          if (!project) { setNewProject({ ...newProject, msg: '请先填项目名' }); return; }
           setNewProject({ ...newProject, busy: true, msg: '创建中…' });
           try {
             const svc = clientCtx && typeof clientCtx.get === 'function' ? clientCtx.get('uiWorkspace') : null;
@@ -1464,17 +1612,37 @@ function summarizeMessage(raw) {
               const raw = await svc.connectWorkspace(workspaceId, { agentPreset: 'cordis' });
               sessionId = typeof raw === 'string' ? raw : ((raw && (raw.sessionId || raw.id)) || '');
             }
-            if (!sessionId && typeof svc.startSession === 'function') {
-              svc.startSession(workspaceId, { agentPreset: 'cordis' });
+            // 2026-11-12：拿不到 id 时改走 `sessions.create`。不能只调 startSession——
+            // 它返回 void，之后 sessionId 仍为空就不改名，弹窗静默关闭、列表毫无变化。
+            if (!sessionId) {
+              const sessionsSvc = clientCtx && typeof clientCtx.get === 'function' ? clientCtx.get('sessions') : null;
+              if (sessionsSvc && typeof sessionsSvc.create === 'function') {
+                sessionId = await sessionsSvc.create(
+                  workspaceId !== undefined ? { workspaceId, agentPreset: 'cordis' } : { agentPreset: 'cordis' },
+                );
+              }
             }
-            if (sessionId) {
-              await fetch(`${API}/rename`, {
-                method: 'POST', headers: { 'content-type': 'application/json' },
-                body: JSON.stringify({ sessionId, title: `${project} · ${member}` }),
-              });
+            if (!sessionId) {
+              setNewProject({ ...newProject, busy: false, msg: '创建失败：没拿到新会话 id（先切一个工作区再试）' });
+              return;
+            }
+            const renameRes = await fetch(`${API}/rename`, {
+              method: 'POST', headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({ sessionId, title: `${project} · ${member}` }),
+            });
+            // 宿主这条路由失败时也是 HTTP 200 + {ok:false}，只看 res.ok 会漏判。
+            let renameData = null;
+            try { renameData = await renameRes.json(); } catch { renameData = null; }
+            if (!renameRes.ok || !renameData || renameData.ok === false) {
+              const why = (renameData && renameData.error) ? `：${renameData.error}` : '';
+              setNewProject({ ...newProject, busy: false, msg: `会话已建，但改名失败（HTTP ${renameRes.status}${why}）` });
+              return;
             }
             // 初始化房间看板（不存在则建模板）
             try { await fetch(`${API}/board?project=${encodeURIComponent(project)}`, { method: 'POST' }); } catch { /* 看板可选 */ }
+            // 2026-11-12：建完立刻打开该会话。此前只建不打开，而侧栏又不显示 blank 会话，
+            // 用户点「创建」后界面上什么都没发生——这就是「新项目建不了，没反应」。
+            openSessionById(sessionId);
             setNewProject(null);
           } catch (error) {
             setNewProject({ ...newProject, busy: false, msg: `失败：${String((error && error.message) || error)}` });
@@ -1492,15 +1660,15 @@ function summarizeMessage(raw) {
               onKeyDown: (event) => { if (event.key === 'Enter') submit(); if (event.key === 'Escape') setNewProject(null); },
             }),
             h('div', { style: { height: '8px' } }),
-            h('input', {
-              className: 'pr-modal-input',
-              placeholder: `成员的 agent 名（默认 ${managerName()}）`,
-              value: newProject.member || '',
-              onChange: (event) => setNewProject({ ...newProject, member: event.target.value, msg: '' }),
-              onKeyDown: (event) => { if (event.key === 'Enter') submit(); if (event.key === 'Escape') setNewProject(null); },
-            }),
-            h('div', { style: { marginTop: '6px', fontSize: '10.5px', color: 'var(--dsw-alias-label-secondary)' } },
-              `创建后会话标题为「${String(newProject.name || '项目名').trim()} · ${String(newProject.member || 'Yat2').trim() || 'Yat2'}」`),
+            // 2026-11-12 用户令：新建项目不再让用户填管理者名称，只留项目名；
+            // 管理者名统一取 ⚙ 设置里的值（submit 里 member 为空即回落 managerName()）。
+            h('div', {
+              style: {
+                fontSize: 'calc(10.5px + var(--dsh-content-font-delta, 0px))',
+                color: 'var(--dsw-alias-label-secondary)',
+              },
+            },
+              `创建后会话标题为「${String(newProject.name || '项目名').trim()} · ${String(newProject.member || managerName()).trim() || managerName()}」，管理者名可在 ⚙ 设置里改`),
             newProject.msg ? h('div', { className: 'pr-hint' }, newProject.msg) : null,
             h('div', { className: 'pr-modal-actions' },
               h('button', { className: 'pr-btn', onClick: () => setNewProject(null), disabled: newProject.busy }, '取消'),

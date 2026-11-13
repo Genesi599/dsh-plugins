@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Hub 桌面端",
-    "description": "AI-Agent-Hub 的 DSH 前端形态：暖色暗调、紧凑侧栏会话列表、自有品牌标记与侧栏状态卡，并把多 agent 的项目与任务线视图接进界面。"
+    "description": "DeepSeek Harness 的紧凑前端：侧栏状态卡、项目与任务线集成、会话内群聊房间、新建项目向导。配色跟随当前 DSH 主题。"
   }
 }

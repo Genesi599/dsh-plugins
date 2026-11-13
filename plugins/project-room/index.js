@@ -15,7 +15,7 @@
  * 这样即使用户不用本插件，也能用普通编辑器维护房间内容。
  */
 
-import { mkdirSync, readFileSync, writeFileSync, existsSync, statSync, renameSync, unlinkSync, readdirSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync, existsSync, statSync, renameSync, unlinkSync, readdirSync, appendFileSync, rmSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
 import { homedir } from 'node:os';
 
@@ -148,6 +148,31 @@ function loadAvatars(config, hub) {
     if (data && typeof data === 'object' && !Array.isArray(data)) Object.assign(merged, data);
   }
   return merged;
+}
+
+/**
+ * 磁盘上真实存在的会话 id（裸 uuid，小写）。
+ * 目录名有两种形态（2026-11-09 实测）：老会话是纯 uuid，新会话是 `session-<uuid>`。
+ * 统一剥前缀后按裸 uuid 收录，前端比较时也剥前缀，两边口径一致。
+ */
+function diskSessionIds() {
+  const base = join(homedir(), '.dsh', 'sessions');
+  const ids = new Set();
+  let workspaces = [];
+  try { workspaces = readdirSync(base); } catch { return ids; }
+  for (const workspace of workspaces) {
+    const dir = join(base, workspace);
+    let entries = [];
+    try {
+      if (!statSync(dir).isDirectory()) continue;
+      entries = readdirSync(dir);
+    } catch { continue; }
+    for (const name of entries) {
+      const bare = String(name).replace(/^session-/, '').toLowerCase();
+      if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(bare)) ids.add(bare);
+    }
+  }
+  return ids;
 }
 
 /** 原子写：先写临时文件再 rename，避免读到半截内容。 */
@@ -421,26 +446,71 @@ export function apply(ctx, config = {}) {
      */
     route('/project-room/alive', async (req, res) => {
       if (req.method !== 'GET') { json(res, 405, { ok: false, error: 'GET only' }); return; }
-      const base = join(homedir(), '.dsh', 'sessions');
-      const ids = new Set();
-      try {
-        for (const workspace of readdirSync(base)) {
-          const dir = join(base, workspace);
-          let entries = [];
+      const ids = diskSessionIds();
+      json(res, 200, { ok: true, count: ids.size, ids: [...ids] });
+    });
+
+    /**
+     * 6b. 删除幽灵会话的 Host 半（2026-11-12 用户令「这些幽灵对话就不能直接删掉吗」）。
+     *
+     * 客户端「删除」只清 localStorage 是不够的：这些 id 有的还留在 registry 的
+     * 归档集合（`global.archivedSessionIds`）里，有的还留着 session_projcache 缓存。
+     * 这里把它们一起清掉。**只清磁盘上已不存在的**——服务端自己再核一遍磁盘目录，
+     * 有目录的一律进 skipped，真实会话一个都不动。
+     *
+     * 摘归档记录用 `unarchiveSession`：它只从集合里删条目、**不做会话存在性检查**
+     * （dsh-workspace 的文档明说「an entry whose session is gone still resolves」），
+     * 正好用来删悬挂条目；pruneArchivedSessions 当年不敢用它是因为删完幽灵会冒出来，
+     * 而这里客户端同时记了墓碑（purged 集合），不会再渲染。
+     */
+    route('/project-room/purge-sessions', async (req, res) => {
+      if (req.method !== 'POST') { json(res, 405, { ok: false, error: 'POST only' }); return; }
+      const payload = await readBody(req);
+      const ids = Array.isArray(payload?.sessionIds) ? payload.sessionIds.map((v) => String(v)).filter(Boolean) : [];
+      if (!ids.length) { json(res, 400, { ok: false, error: 'sessionIds 必须是非空数组' }); return; }
+      const alive = diskSessionIds();
+      const registry = hub.get('workspaceRegistry');
+      const archives = new Set(
+        registry && Array.isArray(registry.archivedSessionIds) ? registry.archivedSessionIds.map(String) : [],
+      );
+      const deleted = [];
+      const skipped = [];
+      const seen = new Set();   // 同一个会话的两种 id 形态（裸 uuid / session-<uuid>）只处理一次
+      let archivedRemoved = 0;
+      let cacheRemoved = 0;
+      for (const raw of ids) {
+        const bare = String(raw).toLowerCase().replace(/^session-/, '');
+        if (!bare || seen.has(bare)) continue;
+        seen.add(bare);
+        if (alive.has(bare)) { skipped.push(raw); continue; }   // 磁盘上还有目录 → 不动
+        deleted.push(bare);
+        // ① 归档记录（两种 id 形态都试：registry 里存的是当时落盘的原始形态）
+        const stored = archives.has(bare) ? bare : (archives.has(`session-${bare}`) ? `session-${bare}` : '');
+        if (stored && registry && typeof registry.unarchiveSession === 'function') {
           try {
-            if (!statSync(dir).isDirectory()) continue;
-            entries = readdirSync(dir);
-          } catch { continue; }
-          for (const name of entries) {
-            // 目录名有两种形态（实测 2026-11-09）：老会话是纯 uuid（10 个），
-            // 新会话是 `session-<uuid>`（175 个）。统一剥前缀后按裸 uuid 收录，
-            // 前端比较时也 strip 前缀，两边口径一致。
-            const bare = String(name).replace(/^session-/, '').toLowerCase();
-            if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(bare)) ids.add(bare);
+            await registry.unarchiveSession(stored);
+            archives.delete(stored);
+            archivedRemoved += 1;
+          } catch (error) {
+            console.warn(`[project-room] unarchive dangling ${stored} failed: ${String((error && error.message) || error)}`);
           }
         }
-      } catch { /* 目录不存在就返回空集 */ }
-      json(res, 200, { ok: true, count: ids.size, ids: [...ids] });
+        // ② 残留标题缓存
+        for (const name of [`${bare}.json`, `session-${bare}.json`]) {
+          const cachePath = join(homedir(), '.dsh', 'storages', 'session_projcache', 'sessions', name);
+          try {
+            if (existsSync(cachePath)) { rmSync(cachePath, { force: true }); cacheRemoved += 1; }
+          } catch { /* 缓存删不掉不挡删除 */ }
+        }
+      }
+      const at = new Date().toISOString();
+      for (const id of deleted) {
+        try {
+          appendFileSync(join(roomRoot(config, hub), 'deleted-sessions.log'),
+            `${at} purged ghost session ${id} (source=settings/hidden-panel)\n`, 'utf8');
+        } catch { /* 日志失败不影响删除 */ }
+      }
+      json(res, 200, { ok: true, deleted, skipped, archivedRemoved, cacheRemoved });
     });
 
     /** 7. 改会话标题（侧栏右键「改名」/ 双击改名用）。走原生 sessionController.rename。 */

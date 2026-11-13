@@ -1,6 +1,6 @@
 {
   "name": "dsh-project-room",
-  "version": "0.2.5",
+  "version": "0.2.11",
   "type": "module",
   "description": "Project rooms for DeepSeek Harness: group sessions into projects, see per-project runtime, and open a room with a shared board, task list, todo queue and message delivery to member sessions.",
   "main": "index.js",
@@ -40,12 +40,21 @@
   ],
   "license": "MIT",
   "scripts": {
-    "test": "node test/smoke.mjs"
+    "test": "node test/smoke.mjs && node test/purge-sessions.test.mjs"
   },
   "engines": {
     "dsh": ">=0.2.1-rc.1"
   },
   "peerDependencies": {
     "dsh-hub-core": "^0.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Genesi599/dsh-plugins.git",
+    "directory": "plugins/project-room"
+  },
+  "homepage": "https://github.com/Genesi599/dsh-plugins/tree/main/plugins/project-room",
+  "bugs": {
+    "url": "https://github.com/Genesi599/dsh-plugins/tree/main/plugins/project-room/issues"
   }
 }

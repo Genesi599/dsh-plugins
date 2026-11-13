@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Hub Desktop",
-    "description": "AI-Agent-Hub's DSH front-end: warm dark palette, compact session sidebar, original brand mark and a sidebar status card, plus project/taskline workspace integration."
+    "description": "Compact front-end for DeepSeek Harness: a sidebar status card, project and task-line integration, an in-session group chat room, and a guided new-project dialog. Follows the active DSH theme."
   }
 }

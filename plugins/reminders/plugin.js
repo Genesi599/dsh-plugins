@@ -35,6 +35,7 @@ const SCRIPT_ALLOWLIST = Object.freeze([
   "test_session_cleanup_reminder.py",
   "figure_change_gate_reminder.py",
   "secret_store_reminder.py",
+  "office_readable_output_check.py",
 ]);
 
 function textOf(message) {

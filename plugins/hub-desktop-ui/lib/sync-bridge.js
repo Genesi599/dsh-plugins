@@ -1202,7 +1202,9 @@ export function startSyncBridge(ctx, options = {}) {
         if (!dirStat.isDirectory()) continue;
         let newest = dirStat.mtimeMs;
         let maxSeq = 0;
-        let textMax = 0;
+        let textCount = 0;   // 2026-11-13（军师报修）：GC 判定用**文件数**而非最大编号——
+        let textMax = 0;     // 编号有空洞时（如缺 8 号，1..82 共 81 文件）marker 81 < max 82
+                             // 永不满足 → 目录 GC 不了。textMax 保留仅供日志/诊断。
         for (const file of readdirSync(dir)) {
           const seq = Number((file.match(/^(\d+)\./) || [])[1]);
           if (Number.isInteger(seq) && seq > maxSeq) maxSeq = seq;
@@ -1212,7 +1214,10 @@ export function startSyncBridge(ctx, options = {}) {
         if (existsSync(textDir)) {
           for (const file of readdirSync(textDir)) {
             const seq = Number((file.match(/^(\d+)\.json$/) || [])[1]);
-            if (Number.isInteger(seq) && seq > textMax) textMax = seq;
+            if (Number.isInteger(seq)) {
+              textCount += 1;
+              if (seq > textMax) textMax = seq;
+            }
             try { newest = Math.max(newest, statSync(join(textDir, file)).mtimeMs); } catch { /* 刚被删 */ }
           }
         }
@@ -1224,9 +1229,10 @@ export function startSyncBridge(ctx, options = {}) {
         }
         if (!archived) continue;                       // 没归档过 → 永不删（安全优先）
         if (now - newest <= 24 * 60 * 60 * 1000) continue;   // ② 还在活动窗口内
-        // ③ 标记是快照：有比快照更新的内容说明还在录/未归档，不能删
+        // ③ 标记是快照：有比快照更多的转写文件说明还在录/未归档，不能删
+        //    判据 = marker.sentences >= 实际 text 文件**数**（count），不是最大编号。
         const archivedSentences = Number(archived.sentences || 0);
-        if (textMax > 0 && archivedSentences < textMax) continue;
+        if (textCount > 0 && archivedSentences < textCount) continue;
         rmSync(dir, { recursive: true, force: true });
       }
     } catch { /* 清理失败不影响主流程 */ }
