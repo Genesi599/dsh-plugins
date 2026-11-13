@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Quota panel">
+  <!-- 余额与用量：一枚币 + 右侧三根用量柱（同族 64×64 圆角方块风格） -->
+  <rect x="3" y="3" width="58" height="58" rx="14" fill="#0f9d76"/>
+  <circle cx="24" cy="32" r="12" fill="none" stroke="#eaf7f2" stroke-width="3.5"/>
+  <path d="M24 24v16M29 27.5c0-2-2.2-3.5-5-3.5s-5 1.5-5 3.5 2.2 3.5 5 3.5 5 1.5 5 3.5-2.2 3.5-5 3.5-5-1.5-5-3.5" fill="none" stroke="#eaf7f2" stroke-width="2.6" stroke-linecap="round"/>
+  <rect x="41" y="38" width="5" height="10" rx="2.5" fill="#bfe9dc"/>
+  <rect x="48" y="31" width="5" height="17" rx="2.5" fill="#eaf7f2"/>
+  <rect x="55" y="24" width="5" height="24" rx="2.5" fill="#bfe9dc" opacity="0.75"/>
+</svg>
