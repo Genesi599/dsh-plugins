@@ -56,6 +56,15 @@
 
 ## 安装
 
+### 单独装
+
+```sh
+dsh plugin --profile <profile> add dsh-project-room
+```
+
+`<profile>` 换成你的 DSH profile 名（`dsh plugin --profile <name> list` 可列出）。
+只装本插件时，AI-Agent-Hub 其余插件**不会**跟着来——要一次装齐请用下面的整套装。
+
 ### 整套装（一条命令）
 
 想把 AI-Agent-Hub 这套插件一次装齐（本插件 + 另外 7 个 + 依赖闭包）：
@@ -66,9 +75,6 @@ npx dsh-hub-suite            # 先看它要改什么：npx dsh-hub-suite --dry-r
 
 需要 Node.js 18+；它会把依赖写进 DSH profile 的 `package.json`、安装依赖，并把包名登记进 `dsh.profile.bundles`。装完重启 DeepSeek Harness。
 
-```sh
-dsh plugin --profile <profile> add dsh-project-room
-```
 
 或在本机用插件管理器安装指向该目录的 bundle。
 

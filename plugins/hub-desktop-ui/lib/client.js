@@ -2081,8 +2081,8 @@ function loadRunbarUnread() {
      *
      * **严格模式（2026-10-20）**：只有「真像 `项目 · 成员`」的标题才建项目行。
      * 起因：子代理/自动标题会把整段 prompt 当标题（如
-     * `你是「骨髓微环境项目 · 工程师」分身（一次性只读盘点任务）…` 被截成
-     * `你是「骨髓微环境项目 · 工程`），里面恰好含 ` · `，于是侧栏凭空多出一行
+     * `你是「骨髓微环境课题 · 工程师」分身（一次性只读盘点任务）…` 被截成
+     * `你是「骨髓微环境课题 · 工程`），里面恰好含 ` · `，于是侧栏凭空多出一行
      * 假项目 `你是「骨髓微…` + 芯片 `工程`。句子型标题一律回落到共享项目。
      */
     const TITLE_SENTENCE_CHARS = /[「」『』《》【】（）()[\]{}<>“”‘’"'。，、；;：:！!？?…—\n\r\t]/;
@@ -5524,7 +5524,7 @@ function HubWorkspaces(props) {
 
       // 拉取消息（2026-10-22 重做）：改走 Host `/hub/session-events`（活会话取内存、
       // 冷会话读持久日志，不激活 agent）。旧实现用 retain → eventSource，而 eventSource
-      // 只对「本 Client 打开过」的会话有快照——冷成员（如 B细胞清除项目 的汇报师）一条
+      // 只对「本 Client 打开过」的会话有快照——冷成员（如 B细胞清除课题 的汇报师）一条
       // 事件都拿不到，归了线的消息也显示「还没有消息」。按 seq 增量轮询；Host 路由
       // 不可用时退回 retain → eventSource（老行为兜底）。
       React.useEffect(() => {
@@ -7859,6 +7859,266 @@ function HubWorkspaces(props) {
       );
     }
 
+    /* 2026-11-13 用户令：在设置里加一个**真正写侧栏宽度**的滑块。
+       通道选择（关键）：写 frame 的内联 `gridTemplateColumns` 首轨——这正是 DSH 官方
+       三栏把手（`_handle`）拖动时写的同一个地方（探针实测：拖它 385px→348px 就是这么写的）。
+       不装 MutationObserver、不做周期 enforcer，所以不会和任何别的写入者互相覆盖。
+       上下限取官方 clampWidth(264, 420)：超出 420 的值会在下一次 React 重排被写回 420。 */
+    const SIDEBAR_WIDTH_KEY = 'hub.sidebar.width';
+    const SIDEBAR_WIDTH_MIN = 264;
+    const SIDEBAR_WIDTH_MAX = 420;
+    const SIDEBAR_WIDTH_DEFAULT = 340;
+    function clampSidebarWidthPx(px) {
+      const n = Math.round(Number(px));
+      if (!Number.isFinite(n)) return 0;
+      return Math.min(SIDEBAR_WIDTH_MAX, Math.max(SIDEBAR_WIDTH_MIN, n));
+    }
+    function readSidebarWidthPx() {
+      try {
+        const raw = window.localStorage.getItem(SIDEBAR_WIDTH_KEY);
+        if (raw === null) return 0;                       // 0 = 不介入
+        return clampSidebarWidthPx(raw);
+      } catch (error) { return 0; }
+    }
+    function writeSidebarWidthPx(px) {
+      try {
+        if (!px) { window.localStorage.removeItem(SIDEBAR_WIDTH_KEY); return 0; }
+        const next = clampSidebarWidthPx(px);
+        window.localStorage.setItem(SIDEBAR_WIDTH_KEY, String(next));
+        return next;
+      } catch (error) { return 0; }
+    }
+    /** 启动应用结果上报（诊断通道，便于重启后核对「有没有真的应用上」）。 */
+    function reportBootApply(kind, desired, tries, touched) {
+      try {
+        fetch('/hub/client-error', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ kind: 'grid-probe', phase: 'boot-apply', at: new Date().toISOString(),
+            what: kind, desired, tries, touched }),
+        }).catch(() => {});
+      } catch (error) { /* ignore */ }
+    }
+
+    /** 宽度补写闸门触发时的上报（临时诊断通道，便于没控制台时取证）。 */
+    function reportWidthGuard(times) {
+      try {
+        fetch('/hub/client-error', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ kind: 'grid-probe', phase: 'width-guard', at: new Date().toISOString(), times }),
+        }).catch(() => {});
+      } catch (error) { /* ignore */ }
+    }
+
+    /* 2026-11-13 用户令：中间聊天区宽度也做成滑块。
+       依据源码 `dsh-client-ui-conversation`：
+         · 拖动把手写 `--dsh-chat-user-width`（写在内联 style 上）；
+         · 松手提交到 localStorage `dsh.conversation.contentWidth`；
+         · 取值 clamp：`resolveContentWidth(columnWidth, pref)` → `[CONTENT_MIN=640, max(640, columnWidth-176)]`；
+           未设偏好时默认 `max(680, min(columnWidth*0.64, 920))`。
+       所以我们写同样的变量 + 同样的存储键，并在应用前按「中栏实际宽 - 176」夹一次，避免超出可用宽度。 */
+    const CHAT_WIDTH_KEY = 'hub.conversation.width';
+    const CHAT_WIDTH_MIN = 640;
+    const CHAT_WIDTH_MAX = 1400;
+    function clampChatWidthPx(px) {
+      const n = Math.round(Number(px));
+      if (!Number.isFinite(n) || n <= 0) return 0;
+      let max = CHAT_WIDTH_MAX;
+      try {
+        const center = document.querySelector('[class*="_centerCol"], [class*="centerCol"]');
+        if (center) {
+          const w = Math.round(center.getBoundingClientRect().width);
+          if (w > 200) max = Math.max(CHAT_WIDTH_MIN, Math.min(CHAT_WIDTH_MAX, w - 176));
+        }
+      } catch (error) { /* ignore */ }
+      return Math.min(max, Math.max(CHAT_WIDTH_MIN, n));
+    }
+    function readChatWidthPx() {
+      try {
+        const raw = window.localStorage.getItem(CHAT_WIDTH_KEY);
+        if (raw === null) return 0;
+        return Math.round(Number(raw)) || 0;
+      } catch (error) { return 0; }
+    }
+    function writeChatWidthPx(px) {
+      try {
+        if (!px) { window.localStorage.removeItem(CHAT_WIDTH_KEY); return 0; }
+        const next = clampChatWidthPx(px);
+        window.localStorage.setItem(CHAT_WIDTH_KEY, String(next));
+        return next;
+      } catch (error) { return 0; }
+    }
+    /** 应用聊天区宽度；返回实际写入的元素数（0 = 没找到落点）。 */
+    function applyChatWidthPx(px) {
+      const desired = clampChatWidthPx(px);
+      if (!desired) return 0;
+      let touched = 0;
+      try {
+        for (const el of document.querySelectorAll('[style]')) {
+          if (el.style && el.style.getPropertyValue && el.style.getPropertyValue('--dsh-chat-user-width')) {
+            el.style.setProperty('--dsh-chat-user-width', desired + 'px');
+            touched += 1;
+          }
+        }
+      } catch (error) { /* ignore */ }
+      try { document.documentElement.style.setProperty('--dsh-chat-user-width', desired + 'px'); } catch (error) { /* ignore */ }
+      try { window.localStorage.setItem('dsh.conversation.contentWidth', String(desired)); } catch (error) { /* ignore */ }
+      try { window.dispatchEvent(new Event('resize')); } catch (error) { /* ignore */ }
+      return touched;
+    }
+
+    /* 2026-11-13 定案②：官方 layout 服务在本插件上下文里取不到（`ctx.get('layout')` 返回空，
+       实测 via=no-layout-service），所以改用**官方把手**：在 AppFrame 的 `_handle` 元素上
+       合成 pointerdown → pointermove → pointerup，让 DSH 自己的 `actions.setSidebar` 生效。
+       这是唯一「改 React 状态」且不碰 CSS 的办法，侧栏内容（wtg9ga_root 的 inline width）
+       会跟着一起变——这正是用户要的「列宽和文字一起自适应」。 */
+    function dragSidebarHandleToPx(px) {
+      const desired = clampSidebarWidthPx(px);
+      if (!desired) return 'no-value';
+      const col = document.querySelector('[class*="_sidebarCol"], [class*="sidebarCol"]');
+      const frame = col && col.parentElement;
+      if (!frame) return 'no-frame';
+      // 找侧栏那条把手：frame 里 cursor:col-resize 且窄条的元素，取最靠左的
+      const handles = Array.from(frame.querySelectorAll('*')).filter((el) => {
+        try { return window.getComputedStyle(el).cursor === 'col-resize'; } catch (error) { return false; }
+      });
+      if (!handles.length) return 'no-handle';
+      let handle = handles[0];
+      let bestLeft = Infinity;
+      for (const el of handles) {
+        let box;
+        try { box = el.getBoundingClientRect(); } catch (error) { continue; }
+        if (!box || box.width === 0 || box.width > 24) continue;
+        if (box.left < bestLeft) { bestLeft = box.left; handle = el; }
+      }
+      let hbox;
+      try { hbox = handle.getBoundingClientRect(); } catch (error) { return 'no-handle-box'; }
+
+      // ⚠️ 为什么走 React props 而不是 dispatchEvent：
+      // 官方把手在 onPointerDown 里先 `setPointerCapture(pointerId)` 再记 capture.current；
+      // 合成指针（pointerId=1）在没有真实按下态时 setPointerCapture 会抛错 → 处理器中断 →
+      // capture.current 没设置 → 后续 move/up 全被忽略。表现就是「看起来拖了但宽度没变」
+      // （实测：storage 已写 280，但 sidebarCol 仍是 420）。所以这里临时把三个 pointer-capture
+      // API 打成空实现，再直接调该元素上的 React props 处理器。
+      let props = null;
+      try {
+        for (const key of Object.keys(handle)) {
+          if (key.startsWith('__reactProps$')) { props = handle[key]; break; }
+        }
+      } catch (error) { props = null; }
+      if (!props || typeof props.onPointerDown !== 'function') {
+        // 退路：原生事件派发（旧行为）
+        const opts = { bubbles: true, cancelable: true, composed: true, pointerId: 1,
+          pointerType: 'mouse', isPrimary: true, button: 0, buttons: 1,
+          clientX: Math.round(hbox.left + hbox.width / 2), clientY: Math.round(hbox.top + hbox.height / 2) };
+        try {
+          handle.dispatchEvent(new PointerEvent('pointerdown', opts));
+          handle.dispatchEvent(new PointerEvent('pointerup', { ...opts, buttons: 0,
+            clientX: opts.clientX + (desired - Math.round(col.getBoundingClientRect().width)) }));
+          return 'ok:event-fallback';
+        } catch (error) { return 'err:' + String(error && error.message).slice(0, 50); }
+      }
+
+      const startX = Math.round(hbox.left + hbox.width / 2);
+      const y = Math.round(hbox.top + Math.min(120, hbox.height / 2));
+      const delta = desired - Math.round(col.getBoundingClientRect().width);
+      if (delta === 0) return 'ok:already';
+      const saved = {
+        spc: handle.setPointerCapture,
+        hpc: handle.hasPointerCapture,
+        rpc: handle.releasePointerCapture,
+      };
+      const fake = (x) => ({
+        button: 0, pointerId: 1, clientX: x, clientY: y,
+        currentTarget: handle, target: handle,
+        preventDefault() {}, stopPropagation() {},
+      });
+      try {
+        handle.setPointerCapture = () => {};
+        handle.hasPointerCapture = () => false;
+        handle.releasePointerCapture = () => {};
+        props.onPointerDown(fake(startX));
+        if (typeof props.onPointerMove === 'function') props.onPointerMove(fake(startX + delta));
+        if (typeof props.onPointerUp === 'function') props.onPointerUp(fake(startX + delta));
+      } catch (error) {
+        return 'err:' + String(error && error.message).slice(0, 50);
+      } finally {
+        try {
+          handle.setPointerCapture = saved.spc;
+          handle.hasPointerCapture = saved.hpc;
+          handle.releasePointerCapture = saved.rpc;
+        } catch (error) { /* ignore */ }
+      }
+      // 校验：不确认生效就不算成功（否则启动重试会提前放弃，正是「重启后变回去」的一半原因）
+      const after = Math.round(col.getBoundingClientRect().width);
+      return Math.abs(after - desired) <= 2 ? 'ok:props-drag' : 'no-effect(' + after + '!=' + desired + ')';
+    }
+
+    /* 2026-11-13 定案：侧栏宽度**必须走官方 layout 状态**，不能只写 CSS。
+       证据（几何链条 probe）：我们写 frame 内联 grid 后，`_sidebarCol` 变成 420，
+       但侧栏自己的根节点 `wtg9ga_root` 仍是 **inline width:280px**（源码：
+       `style: wide ? { width: collapsed ? lastWideWidth : width } : void 0`，
+       width 来自 React 状态），所以「列变宽、内容不动」——正是用户报的现象。
+       官方入口：client 服务 `layout`（`ctx.get('layout')`）→ `.panels.setSidebar(px)`
+       （LayoutController 把 store actions 存成 `panels`），值域 264–420。 */
+    function setSidebarWidthViaLayout(ctx, px) {
+      const desired = clampSidebarWidthPx(px);
+      if (!desired) return 'no-value';
+      let layout = null;
+      try { layout = ctx && (ctx.layout || (typeof ctx.get === 'function' ? ctx.get('layout') : null)); } catch (error) { layout = null; }
+      if (!layout) return 'no-layout-service';
+      const candidates = [layout.panels, layout.actions, layout];
+      for (const holder of candidates) {
+        if (holder && typeof holder.setSidebar === 'function') {
+          try {
+            holder.setSidebar(desired);
+            return 'ok:' + (holder === layout.panels ? 'panels' : holder === layout.actions ? 'actions' : 'layout');
+          } catch (error) { /* 试下一个形状 */ }
+        }
+      }
+      return 'no-setSidebar';
+    }
+
+    /** 找 AppFrame：侧栏列（._sidebarCol）的父级，且带内联 gridTemplateColumns。 */
+    function sidebarFrame() {
+      try {
+        const col = document.querySelector('[class*="_sidebarCol"], [class*="sidebarCol"]');
+        const frame = col && col.parentElement;
+        if (frame && frame.style && frame.style.gridTemplateColumns) return frame;
+      } catch (error) { /* ignore */ }
+      return null;
+    }
+
+    /* 2026-11-13 用户令：只作用于左侧栏的字号缩放（85%–130%）。
+       实现 = 一个 CSS 变量 --hub-sidebar-font-scale，project-room 的 58 处字号都乘它；
+       写入者只有本文件（设置页 + 启动应用），不再往别处的样式里插手。 */
+    const SIDEBAR_FONT_KEY = 'hub.sidebar.fontScale';
+    function clampSidebarFontScale(pct) {
+      const n = Math.round(Number(pct));
+      if (!Number.isFinite(n)) return 100;
+      return Math.min(130, Math.max(85, n));
+    }
+    function readSidebarFontScale() {
+      try {
+        const raw = window.localStorage.getItem(SIDEBAR_FONT_KEY);
+        if (raw === null) return 100;
+        return clampSidebarFontScale(raw);
+      } catch (error) { return 100; }
+    }
+    function applySidebarFontScale(pct) {
+      try {
+        document.documentElement.style.setProperty('--hub-sidebar-font-scale', String(clampSidebarFontScale(pct) / 100));
+        return true;
+      } catch (error) { return false; }
+    }
+    function writeSidebarFontScale(pct) {
+      const next = clampSidebarFontScale(pct);
+      try { window.localStorage.setItem(SIDEBAR_FONT_KEY, String(next)); } catch (error) { /* ignore */ }
+      applySidebarFontScale(next);
+      return next;
+    }
+
     /* 2026-11-11 用户：「这个（More）也隐藏吧…在设置里面加一个选项，隐藏或者显示」，
        随后又问「还有 new session 的开关呢」→ 设置页「侧栏」分区里两行开关，各自控制一颗出厂按钮。
        偏好存 localStorage，落到 <html data-hub-…>，隐藏由 SKIN_CSS 里对应的 html[...] 规则执行。
@@ -7935,8 +8195,177 @@ function HubWorkspaces(props) {
       React.useEffect(() => {
         for (const toggle of SIDEBAR_TOGGLES) applyToggle(toggle, state[toggle.key]);
       }, [state]);
+      // 2026-11-13 用户令：宽度设置改由 dsh-layout 插件提供；这里放「侧栏字号」滑块
+      // （只作用左侧栏：project-room 的字号全部乘 var(--hub-sidebar-font-scale)）。
+      // 聊天区宽度滑块
+      const [chatWidthPx, setChatWidthPx] = React.useState(() => readChatWidthPx() || 920);
+      const [chatWidthOn, setChatWidthOn] = React.useState(() => readChatWidthPx() > 0);
+      const commitChatWidth = (px) => {
+        if (!px) {
+          writeChatWidthPx(0);
+          setChatWidthOn(false);
+          setChatWidthPx(920);
+          try { window.localStorage.removeItem('dsh.conversation.contentWidth'); } catch (error) { /* ignore */ }
+          try { document.documentElement.style.removeProperty('--dsh-chat-user-width'); } catch (error) { /* ignore */ }
+          try { window.dispatchEvent(new Event('resize')); } catch (error) { /* ignore */ }
+          return;
+        }
+        const stored = writeChatWidthPx(px);
+        setChatWidthPx(stored || 920);
+        setChatWidthOn(stored > 0);
+        if (stored) applyChatWidthPx(stored);
+      };
+      // 侧栏宽度滑块（写官方同一个通道：frame 内联 grid 首轨）
+      const [widthPx, setWidthPx] = React.useState(() => readSidebarWidthPx() || SIDEBAR_WIDTH_DEFAULT);
+      const [widthOn, setWidthOn] = React.useState(() => readSidebarWidthPx() > 0);
+      const commitWidth = (px) => {
+        const stored = writeSidebarWidthPx(px);
+        setWidthPx(stored || SIDEBAR_WIDTH_DEFAULT);
+        setWidthOn(stored > 0);
+        if (stored) {
+          // 走官方 layout 状态（与启动、实时通道同一条通道）
+          const dragged = dragSidebarHandleToPx(stored);
+          const after = dragged;
+          // 上报一次（临时诊断通道）：把「列 → 槽位 → 列表根」整条链的实际宽度都记下来，
+          // 用来判断宽度在哪一层没有继续传下去（用户报「列变了但文字不跟着自适应」）。
+          try {
+            const w = (sel) => {
+              const el = document.querySelector(sel);
+              if (!el) return null;
+              try {
+                const r = el.getBoundingClientRect();
+                return { x: Math.round(r.width), css: getComputedStyle(el).width };
+              } catch (error) { return null; }
+            };
+            fetch('/hub/client-error', {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({ kind: 'grid-probe', phase: 'slider', at: new Date().toISOString(),
+                desired: stored, inlineAfter: after,
+                frame: w('[class*="_sidebarCol"], [class*="sidebarCol"]'),
+                slotSidebar: w('[data-slot="sidebar"]'),
+                slotWorkspaces: w('[data-slot="sidebar.workspaces"]'),
+                prRoot: w('.pr-root'),
+                prGrid: w('.pr-grid'),
+              }),
+            }).catch(() => {});
+          } catch (error) { /* ignore */ }
+        }
+      };
+      const [fontScale, setFontScale] = React.useState(() => readSidebarFontScale());
+      const commitFontScale = (pct) => {
+        const next = writeSidebarFontScale(pct);
+        setFontScale(next);
+      };
       return h('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px', padding: '4px 0' } },
         h('div', { style: { fontSize: '13px', fontWeight: 600, marginBottom: '4px', color: 'var(--dsw-alias-label-primary)' } }, 'Sidebar'),
+        h('div', {
+          style: {
+            display: 'flex', flexDirection: 'column', gap: '8px', padding: '10px 12px',
+            borderRadius: '10px', background: 'var(--dsw-alias-bg-layer-2)',
+          },
+        },
+          h('div', { style: { display: 'flex', alignItems: 'baseline', gap: '8px' } },
+            h('span', { style: { fontSize: '13px', color: 'var(--dsw-alias-label-primary)' } }, 'Sidebar width'),
+            h('span', {
+              style: {
+                marginLeft: 'auto', fontSize: '12px', fontVariantNumeric: 'tabular-nums',
+                color: widthOn ? 'var(--dsw-alias-brand-primary)' : 'var(--dsw-alias-label-secondary)',
+              },
+            }, widthOn ? widthPx + 'px' : 'not set'),
+          ),
+          h('span', { style: { fontSize: '11.5px', color: 'var(--dsw-alias-label-secondary)' } },
+            "Writes the same column DSH's own divider writes. 264-420px (DSH clamps outside this)."),
+          h('input', {
+            type: 'range', min: SIDEBAR_WIDTH_MIN, max: SIDEBAR_WIDTH_MAX, step: 4, value: widthPx,
+            onChange: (event) => commitWidth(Number(event.target.value)),
+            style: { width: '100%', accentColor: '#d97757' },
+          }),
+          h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } },
+            h('span', { style: { fontSize: '11px', color: 'var(--dsw-alias-label-secondary)' } },
+              SIDEBAR_WIDTH_MIN + '-' + SIDEBAR_WIDTH_MAX + 'px'),
+            h('button', {
+              type: 'button',
+              onClick: () => commitWidth(0),
+              style: {
+                marginLeft: 'auto', padding: '3px 10px', borderRadius: '7px', cursor: 'pointer',
+                border: '1px solid var(--dsw-alias-border-l2)', background: 'transparent',
+                color: 'var(--dsw-alias-label-secondary)', fontSize: '11.5px',
+              },
+            }, 'Clear (use default)'),
+          ),
+        ),
+        h('div', {
+          style: {
+            display: 'flex', flexDirection: 'column', gap: '8px', padding: '10px 12px',
+            borderRadius: '10px', background: 'var(--dsw-alias-bg-layer-2)',
+          },
+        },
+          h('div', { style: { display: 'flex', alignItems: 'baseline', gap: '8px' } },
+            h('span', { style: { fontSize: '13px', color: 'var(--dsw-alias-label-primary)' } }, 'Chat width'),
+            h('span', {
+              style: {
+                marginLeft: 'auto', fontSize: '12px', fontVariantNumeric: 'tabular-nums',
+                color: chatWidthOn ? 'var(--dsw-alias-brand-primary)' : 'var(--dsw-alias-label-secondary)',
+              },
+            }, chatWidthOn ? chatWidthPx + 'px' : 'auto'),
+          ),
+          h('span', { style: { fontSize: '11.5px', color: 'var(--dsw-alias-label-secondary)' } },
+            "Conversation content width. DSH clamps it to 640px and the column minus 176px."),
+          h('input', {
+            type: 'range', min: CHAT_WIDTH_MIN, max: CHAT_WIDTH_MAX, step: 20, value: chatWidthPx,
+            onChange: (event) => commitChatWidth(Number(event.target.value)),
+            style: { width: '100%', accentColor: '#d97757' },
+          }),
+          h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } },
+            h('span', { style: { fontSize: '11px', color: 'var(--dsw-alias-label-secondary)' } },
+              CHAT_WIDTH_MIN + '-' + CHAT_WIDTH_MAX + 'px'),
+            h('button', {
+              type: 'button',
+              onClick: () => commitChatWidth(0),
+              style: {
+                marginLeft: 'auto', padding: '3px 10px', borderRadius: '7px', cursor: 'pointer',
+                border: '1px solid var(--dsw-alias-border-l2)', background: 'transparent',
+                color: 'var(--dsw-alias-label-secondary)', fontSize: '11.5px',
+              },
+            }, 'Clear (auto)'),
+          ),
+        ),
+        h('div', {
+          style: {
+            display: 'flex', flexDirection: 'column', gap: '8px', padding: '10px 12px',
+            borderRadius: '10px', background: 'var(--dsw-alias-bg-layer-2)',
+          },
+        },
+          h('div', { style: { display: 'flex', alignItems: 'baseline', gap: '8px' } },
+            h('span', { style: { fontSize: '13px', color: 'var(--dsw-alias-label-primary)' } }, 'Sidebar font size'),
+            h('span', {
+              style: {
+                marginLeft: 'auto', fontSize: '12px', fontVariantNumeric: 'tabular-nums',
+                color: fontScale === 100 ? 'var(--dsw-alias-label-secondary)' : 'var(--dsw-alias-brand-primary)',
+              },
+            }, fontScale + '%'),
+          ),
+          h('span', { style: { fontSize: '11.5px', color: 'var(--dsw-alias-label-secondary)' } },
+            'Only the left sidebar list (projects and agents). Conversation text is unaffected.'),
+          h('input', {
+            type: 'range', min: 85, max: 130, step: 5, value: fontScale,
+            onChange: (event) => commitFontScale(Number(event.target.value)),
+            style: { width: '100%', accentColor: '#d97757' },
+          }),
+          h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } },
+            h('span', { style: { fontSize: '11px', color: 'var(--dsw-alias-label-secondary)' } }, '85% - 130%'),
+            h('button', {
+              type: 'button',
+              onClick: () => commitFontScale(100),
+              style: {
+                marginLeft: 'auto', padding: '3px 10px', borderRadius: '7px', cursor: 'pointer',
+                border: '1px solid var(--dsw-alias-border-l2)', background: 'transparent',
+                color: 'var(--dsw-alias-label-secondary)', fontSize: '11.5px',
+              },
+            }, 'Reset (100%)'),
+          ),
+        ),
         ...SIDEBAR_TOGGLES.map((toggle) => h(HubSidebarToggleRow, {
           key: toggle.key,
           label: toggle.label,
@@ -8400,12 +8829,228 @@ function HubWorkspaces(props) {
           };
         });
 
+        // ②a-9 【临时诊断，2026-11-13 查“拖左侧分隔条到底改的是谁”】——查完即删。
+        // 记录三样东西，全部打到 /hub/client-error（Electron 里没控制台，只有这条通道能取证）：
+        //   1) 拖动时 pointerdown 命中的元素（tag/class/cursor）——判断抓到的是 DSH 把手还是插件把手；
+        //   2) frame 的 style.gridTemplateColumns 前后变化（DSH 官方拖拽写内联样式）；
+        //   3) <style data-dsh-layout="dynamic"> 的 grid-template-columns 前后变化（dsh-layout 编辑态拖拽写样式表）；
+        // 每次 pointerup 收口成一条 grid-probe 上报，附 sidebar/center/rightbar 的真实像素宽。
+        ctx.effect(() => {
+          const send = (payload) => {
+            try {
+              fetch('/hub/client-error', {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ kind: 'grid-probe', at: new Date().toISOString(), ...payload }),
+              }).catch(() => {});
+            } catch (error) { /* ignore */ }
+          };
+          const describe = (el) => {
+            if (!el || el.nodeType !== 1) return 'none';
+            const cls = typeof el.className === 'string' ? el.className.slice(0, 120) : '';
+            let cursor = '';
+            try { cursor = window.getComputedStyle(el).cursor; } catch (error) { /* ignore */ }
+            const attrs = ['data-slot', 'data-dshl-frame', 'data-dshl-region', 'data-sidebar-collapsed']
+              .map((name) => (el.getAttribute && el.getAttribute(name) ? name + '=' + el.getAttribute(name) : ''))
+              .filter(Boolean).join(' ');
+            return [el.tagName.toLowerCase(), cls, attrs, 'cursor:' + cursor].filter(Boolean).join(' | ');
+          };
+          const frameOf = () => document.querySelector('[data-dshl-frame]')
+            || (document.querySelector('[class*="_sidebarCol"], [class*="sidebarCol"]') || {}).parentElement
+            || null;
+          const dynamicStyleOf = () => document.querySelector('style[data-dsh-layout="dynamic"]');
+          const firstTrack = (css) => {
+            const m = String(css || '').match(/([\d.]+)px/);
+            return m ? Number(m[1]) : null;
+          };
+          const widths = () => {
+            const w = (sel) => {
+              const el = document.querySelector(sel);
+              if (!el) return null;
+              try { return Math.round(el.getBoundingClientRect().width); } catch (error) { return null; }
+            };
+            return {
+              sidebar: w('[class*="_sidebarCol"], [class*="sidebarCol"]'),
+              center: w('[class*="_centerCol"], [class*="centerCol"]'),
+              rightbar: w('[class*="_rightbarCol"], [class*="rightbarCol"]'),
+            };
+          };
+
+          let down = null;
+          let inlineBefore = '';
+          let styleBefore = '';
+          const onDown = (event) => {
+            const frame = frameOf();
+            inlineBefore = frame ? String(frame.style.gridTemplateColumns || '') : '';
+            const dyn = dynamicStyleOf();
+            styleBefore = dyn ? String(dyn.textContent || '').slice(0, 2000) : '';
+            down = { target: describe(event.target), x: Math.round(event.clientX), y: Math.round(event.clientY),
+              widths: widths(), inline: inlineBefore, firstPx: firstTrack(inlineBefore) };
+          };
+          const onUp = (event) => {
+            if (!down) return;
+            const frame = frameOf();
+            const inlineAfter = frame ? String(frame.style.gridTemplateColumns || '') : '';
+            const dyn = dynamicStyleOf();
+            const styleAfter = dyn ? String(dyn.textContent || '').slice(0, 2000) : '';
+            // 只输出了结论相关的部分：哪条变了、值是多少
+            const dynChanged = styleAfter !== styleBefore;
+            const dynGrid = dynChanged ? (styleAfter.match(/grid-template-columns:[^;]{0,120}/) || [''])[0] : '';
+            send({
+              phase: 'drag',
+              hit: down.target,
+              from: { x: down.x, y: down.y },
+              to: { x: Math.round(event.clientX), y: Math.round(event.clientY) },
+              widthsBefore: down.widths,
+              widthsAfter: widths(),
+              inlineBefore,
+              inlineAfter,
+              inlineChanged: inlineAfter !== inlineBefore,
+              dynamicChanged: dynChanged,
+              dynamicGridLine: dynGrid,
+            });
+            down = null;
+          };
+          document.addEventListener('pointerdown', onDown, true);
+          document.addEventListener('pointerup', onUp, true);
+          return () => {
+            document.removeEventListener('pointerdown', onDown, true);
+            document.removeEventListener('pointerup', onUp, true);
+          };
+        }, 'hub-desktop-ui: grid drag probe (temporary)');
+
+
+        // ②b-0c 聊天区宽度（2026-11-13 用户令）：启动时把 hub.conversation.width 落到
+        // --dsh-chat-user-width（DSH 会话区把手用的同一个变量），并按中栏可用宽度夹一次。
+        ctx.effect(() => {
+          const desired = readChatWidthPx();
+          if (!desired) return undefined;
+          // 重启后「变回去」的原因：DSH 会话区在挂载后会按自己的偏好写一次内联变量，
+          // 我们只在启动瞬间写一次就会被它盖掉。这里改成**持续校准 30 秒**（每秒一次，
+          // 幂等写入，不装 observer、不改别人的状态），覆盖「组件晚挂载 / 晚写值」的情形。
+          let tries = 0;
+          let lastTouched = -1;
+          const tick = () => {
+            tries += 1;
+            const touched = applyChatWidthPx(desired);
+            lastTouched = touched;
+            if (tries >= 30) {
+              clearInterval(timer);
+              reportBootApply('chat-width', desired, tries, touched);
+            }
+          };
+          const timer = setInterval(tick, 1000);
+          tick();
+          return () => clearInterval(timer);
+        }, 'hub-desktop-ui: chat width');
+
+        // ②b-0b 侧栏宽度（2026-11-13 用户令）：启动时把 hub.sidebar.width 写进 frame 首轨。
+        // 只写一次（最多重试 ~6s 等 frame 挂载），命中即停——之后你拖官方把手仍然优先。
+        ctx.effect(() => {
+          // ⚠️ 2026-11-13：这里原来是启动时快照 desired，导致「实时通道写 240」被 keeper
+          // 按旧值（368）反复改回，表现为「怎么调都不变」。改成每次读当前存储值。
+          if (!readSidebarWidthPx()) return undefined;
+          let disposed = false;
+          let observer = null;
+          let writes = [];
+          let timer = null;
+
+          const guard = () => {
+            const now = Date.now();
+            writes = writes.filter((t) => now - t < 3000);
+            return writes.length < 20;   // 3 秒内最多补写 20 次，超了立刻停手
+          };
+          const stop = () => {
+            disposed = true;
+            if (timer) { clearInterval(timer); timer = null; }
+            if (observer) { observer.disconnect(); observer = null; }
+          };
+          // 2026-11-13：keeper 不再写 style，也不再盯 style——宽度只通过官方 layout 状态设置，
+          // 否则会和 React 重渲染互改（历史上就是这样把界面弄卡死的）。这里只做「启动时设一次」。
+          let done = false;
+          const ensure = () => {
+            if (disposed || done) return;
+            const desired = readSidebarWidthPx();
+            if (!desired) { stop(); return; }
+            let how = dragSidebarHandleToPx(desired);
+            if (!how || how.indexOf('ok:') !== 0) {
+              const viaSvc = setSidebarWidthViaLayout(ctx, desired);
+              if (viaSvc && viaSvc.indexOf('ok:') === 0) how = viaSvc;
+            }
+            if (how && how.indexOf('ok:') === 0) {
+              done = true;
+              stop();
+            }
+          };
+
+          // ⚠️ 2026-11-13 用户反馈「拖动跟之前不一样了」：补写逻辑会和**你手动拖官方分隔线**打架，
+          // 把宽度弹回存储值，手感变成「拖不动/回弹」。所以这里让位：
+          //   一旦你在 frame 上按下 cursor:col-resize 的把手（不是我们这个滑块），本会话立即停手，
+          //   并在松手时把**你拖出来的宽度**记成新的存储值 —— 下次启动就用你的值。
+          let yieldToUser = false;
+          const onPointerDown = (event) => {
+            try {
+              const el = event && event.target;
+              if (!el || el.tagName === 'INPUT') return;              // 我们自己的滑块不算
+              const frame = sidebarFrame();
+              if (!frame || !frame.contains(el)) return;
+              if (window.getComputedStyle(el).cursor !== 'col-resize') return;
+              stop();                                                  // 让位：本会话不再补写
+              yieldToUser = true;
+            } catch (error) { /* ignore */ }
+          };
+          const onPointerUp = () => {
+            if (!yieldToUser) return;
+            yieldToUser = false;
+            try {
+              const frame = sidebarFrame();
+              const firstPx = frame
+                ? Number((String(frame.style.gridTemplateColumns || '').match(/^\s*([\d.]+)px/) || [])[1])
+                : 0;
+              if (Number.isFinite(firstPx) && firstPx > 0) writeSidebarWidthPx(firstPx);   // 采纳你的手拖结果
+            } catch (error) { /* ignore */ }
+          };
+          window.addEventListener('pointerdown', onPointerDown, { capture: true });
+          window.addEventListener('pointerup', onPointerUp, { capture: true });
+
+          let tries = 0;
+          timer = setInterval(() => {
+            tries += 1;
+            ensure();
+            if (done || tries > 96) {                      // 250ms × 96 ≈ 24s，覆盖慢启动
+              clearInterval(timer);
+              timer = null;
+              reportBootApply('sidebar-width', readSidebarWidthPx(), tries, done ? 1 : 0);
+            }
+          }, 250);
+          return () => {
+            stop();
+            window.removeEventListener('pointerdown', onPointerDown, { capture: true });
+            window.removeEventListener('pointerup', onPointerUp, { capture: true });
+          };
+        }, 'hub-desktop-ui: sidebar width');
+
+
+        // ②b-0 侧栏字号（2026-11-13 用户令）：启动时把 hub.sidebar.fontScale 落到 CSS 变量，
+        // project-room 的字号都乘 --hub-sidebar-font-scale；默认 100% 时不改变任何东西。
+        ctx.effect(() => {
+          applySidebarFontScale(readSidebarFontScale());
+        }, 'hub-desktop-ui: sidebar font scale');
+
         // ②b 侧栏缩放（2026-10-25 用户要求「侧边栏的网页要能缩放」）：
         // 恢复上次缩放；Ctrl/⌘+滚轮在侧栏上 → ±0.1 步进（0.6–2.0）；Ctrl/⌘+0 复位。
         // 监听挂 window 捕获阶段 + closest 判定（侧栏重渲染无需重绑，纯事件驱动）。
-        // 开机跑一次**合成事件自检**（派发 ctrl+wheel → 读回 computed zoom → 还原），
-        // 结果上报 /hub/client-error，便于在没有人工操作时也能证明链路通。
         ctx.effect(() => {
+          // 2026-11-13 一次性迁移：旧的「合成事件自检」在每次启动后会 applySidebarZoom 到
+          // 1 / 0.7 / 1.4 三档（并把值写进 localStorage），用户看到「刚启动正常、几秒后字体变大」。
+          // 自检已删除；历史上被它写脏的缩放值在这里复位成 1，之后再靠 Ctrl+滚轮自己调。
+          try {
+            const MIGRATED = 'hub.sidebar.zoom.reset-20261113';
+            if (!window.localStorage.getItem(MIGRATED)) {
+              window.localStorage.setItem(SIDEBAR_ZOOM_KEY, '1');
+              window.localStorage.setItem(MIGRATED, '1');
+            }
+          } catch (error) { /* ignore */ }
           applySidebarZoom(readSidebarZoom(), { silent: true });
           const inSidebar = (target) => {
             try {
@@ -8442,87 +9087,12 @@ function HubWorkspaces(props) {
           window.addEventListener('wheel', onWheel, { passive: false, capture: true });
           window.addEventListener('keydown', onKeyDown, { capture: true });
 
-          // 合成事件自检（一次性，延迟 4s 等侧栏挂载）：验证 handler 真的改到 computed zoom，
-          // 并做**几何探针**——在 1.0 / 0.7 / 1.4 三档下量侧栏与内部芯片的实际矩形，
-          // 判定 CSS zoom 到底有没有改变布局（用户报「值在变但画面不动」时的关键证据）。
-          const selfTest = setTimeout(() => {
-            try {
-              const sidebar = document.querySelector('[data-slot="sidebar"]');
-              if (!sidebar) {
-                reportSidebarZoom('sidebar-zoom-selftest', { ok: false, reason: 'no-sidebar' });
-                return;
-              }
-              const before = readSidebarZoom();
-              const computedBefore = getComputedStyle(sidebar).zoom;
-              sidebar.dispatchEvent(new WheelEvent('wheel', {
-                bubbles: true, cancelable: true, ctrlKey: true, deltaY: -100,
-              }));
-              const after = readSidebarZoom();
-              const computedAfter = getComputedStyle(sidebar).zoom;
-              applySidebarZoom(before, { silent: true });
-
-              // 几何探针：三档量矩形（侧栏 + 第一个芯片/项目行）
-              const measureAt = (zoomValue) => {
-                // 走真实的 applySidebarZoom（含可见容器内联 zoom），再量矩形
-                applySidebarZoom(zoomValue, { silent: true });
-                const slot = document.querySelector('[data-slot="sidebar"]');
-                const target = sidebarZoomTarget;
-                const child = document.querySelector('[data-slot="sidebar.workspaces"] .hub-chip')
-                  || document.querySelector('[data-slot="sidebar.workspaces"] .hub-proj')
-                  || (target ? target.querySelector('*') : null);
-                const box = slot ? slot.getBoundingClientRect() : null;
-                const tbox = target ? target.getBoundingClientRect() : null;
-                const cbox = child ? child.getBoundingClientRect() : null;
-                const cfont = child ? getComputedStyle(child).fontSize : '';
-                return {
-                  zoomValue,
-                  slot: box ? { w: Math.round(box.width), h: Math.round(box.height) } : null,
-                  target: tbox ? { w: Math.round(tbox.width), h: Math.round(tbox.height) } : null,
-                  child: cbox ? { w: Math.round(cbox.width), h: Math.round(cbox.height), font: cfont } : null,
-                  targetInlineZoom: target ? (target.style.zoom || '') : '',
-                };
-              };
-              const probes = [measureAt(1), measureAt(0.7), measureAt(1.4)];
-              // 裁切探针（2026-10-25 用户报「放大后 New project 按钮显示有问题」）：
-              // 在 1.4 档量目标容器右缘 vs 内部最宽子元素右缘，overflow>2px 即判裁切
-              const clipProbe = (() => {
-                try {
-                  applySidebarZoom(1.4, { silent: true });
-                  const t = sidebarZoomTarget;
-                  if (!t) return null;
-                  const tr = t.getBoundingClientRect();
-                  let maxRight = tr.right;
-                  let worst = '';
-                  for (const child of t.querySelectorAll('*')) {
-                    const rect = child.getBoundingClientRect();
-                    if (!rect.width || !rect.height) continue;
-                    if (rect.right > maxRight) {
-                      maxRight = rect.right;
-                      worst = (child.textContent || '').trim().slice(0, 24);
-                    }
-                  }
-                  return { targetRight: Math.round(tr.right), maxChildRight: Math.round(maxRight), overflowPx: Math.round(maxRight - tr.right), worst };
-                } catch (error) { return { error: String(error && error.message) }; }
-              })();
-              applySidebarZoom(before, { silent: true });
-              reportSidebarZoom('sidebar-zoom-selftest', {
-                ok: after !== before && computedAfter !== computedBefore,
-                before, after, computedBefore, computedAfter,
-                restored: readSidebarZoom(),
-                probes,
-                clipProbe,
-                probeWorks: probes[0] && probes[2]
-                  ? probes[0].child && probes[2].child
-                    && Math.abs(probes[2].child.h - probes[0].child.h) >= 2
-                  : null,
-              });
-            } catch (error) {
-              reportSidebarZoom('sidebar-zoom-selftest', { ok: false, reason: String(error && error.message) });
-            }
-          }, 4000);
+          // 2026-11-13 移除：原来的「合成事件自检」在启动 4 秒后派发 ctrl+wheel 并
+          // applySidebarZoom(1) / (0.7) / (1.4) 三个档位做几何探针——它直接改的是**线上侧栏**，
+          // 用户看到的就是「刚启动正常，几秒后字体突然变大」（还原若因容器换节点而落空就停在放大档）。
+          // 该自检只用于 2026-10 诊断，已删；滚轮/快捷键缩放手势本身保留在下面。
 
           return () => {
-            clearTimeout(selfTest);
             window.removeEventListener('wheel', onWheel, { capture: true });
             window.removeEventListener('keydown', onKeyDown, { capture: true });
           };
@@ -9491,59 +10061,23 @@ function HubWorkspaces(props) {
         //   其余轨道原样拼回；解析失败（轨道数/结构异常）就一个字都不改。
         //   折叠轨（第一轨 < 60px）不碰。外壳每次拖动都会重写内联样式，这里盯住 style 再校准。
         ctx.effect(() => {
-          const SIDEBAR_MIN = 340;
-
-          /** 把 grid-template-columns 按顶层空格切成轨道（括号内的空格不算）。 */
-          const splitTracks = (raw) => {
-            const tracks = [];
-            let depth = 0;
-            let buf = '';
-            for (const ch of raw) {
-              if (ch === '(') depth += 1;
-              else if (ch === ')') depth = Math.max(0, depth - 1);
-              if (/\s/.test(ch) && depth === 0) {
-                if (buf) { tracks.push(buf); buf = ''; }
-                continue;
-              }
-              buf += ch;
-            }
-            if (buf) tracks.push(buf);
-            return tracks;
-          };
-
+          // 2026-11-13 用户令：侧栏宽度交给 dsh-layout 插件管理，这里**不再写** gridTemplateColumns。
+          // 血的教训：本文件与另一处同时写这条轨道会互相覆盖（日志实测 280→319→326→340px 高频抖动），
+          // 把整个界面卡死。宽度只有一个主人时才是安全的。
+          const enforce = () => {};
+          // 2026-11-13 二修（Built-in plugins 页实测报 `ReferenceError: frame is not defined`）：
+          //   上一版补了 locate() 却漏了 frame / mo 的声明——attach() 里 `found !== frame` 一读就抛，
+          //   打断 apply()，本插件所有 UI 贡献（皮肤 CSS / 右下角余额卡 / 设置页开关）全失效。
+          //   两者都是 attach() 要跨调用保留的游标，放 effect 作用域用 let 声明。
           let frame = null;
           let mo = null;
-          let reported = 0;
-
+          // 下面 unCollapse 仍会调用 report（原诊断上报）——补一个空实现，避免作用域里少了它报错
+          const report = () => {};
+          // ⚠️ 2026-11-13 修：上一版移交宽度所有权时把 locate() 一起删了，而 attach() 仍在调它
+          //   → ReferenceError 打断 apply()，后续所有 UI 贡献（皮肤 CSS、左下角余额卡、设置页开关）全没了。
+          //   保留定位函数（只用于找 frame 供 unCollapse 判断，不再写宽度）。
           const locate = () => document.querySelector('[data-slot="sidebar"]')
             ?.closest('[style*="grid-template-columns"]') || null;
-
-          const report = (payload) => {
-            if (reported >= 3) return;
-            reported += 1;
-            try {
-              fetch('/hub/client-error', {
-                method: 'POST',
-                headers: { 'content-type': 'application/json' },
-                body: JSON.stringify({ kind: 'sidebar-width-probe', at: new Date().toISOString(), ...payload }),
-              }).catch(() => {});
-            } catch { /* 上报失败不影响 */ }
-          };
-
-          const enforce = () => {
-            if (!frame) return;
-            const raw = frame.style.gridTemplateColumns;
-            if (!raw) return;
-            const tracks = splitTracks(raw);
-            if (tracks.length < 2) return; // 结构不认识就不动
-            const firstPx = parseFloat(tracks[0]);
-            if (!Number.isFinite(firstPx)) return;
-            if (firstPx < 60) return;            // 折叠轨
-            if (firstPx >= SIDEBAR_MIN) return;  // 已够宽
-            const next = [`${SIDEBAR_MIN}px`, ...tracks.slice(1)].join(' ');
-            frame.style.gridTemplateColumns = next;
-            report({ raw, next, firstPx, tracks: tracks.length });
-          };
 
           const attach = () => {
             const found = locate();
@@ -9598,6 +10132,9 @@ function HubWorkspaces(props) {
 
           attach();
           unCollapse();
+          // 设置页改了宽度 → 复用同一个 enforcer 重新校准（不新增第二个写入者）
+          const onMinChange = () => { try { attach(); } catch (error) { /* ignore */ } };
+          window.addEventListener('hub:sidebar-min-changed', onMinChange);
           const timer = setInterval(() => {
             if (!frame || !document.contains(frame)) attach();
             unCollapse();
@@ -9610,6 +10147,7 @@ function HubWorkspaces(props) {
           return () => {
             clearInterval(timer);
             window.removeEventListener('resize', attach);
+            window.removeEventListener('hub:sidebar-min-changed', onMinChange);
             if (mo) { mo.disconnect(); mo = null; }
             rootMo.disconnect();
           };

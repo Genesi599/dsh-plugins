@@ -61,6 +61,14 @@ DSH 的 markdown 渲染器是 `@deepseek-ai/dsh-client-ui-primitives` 里的 dir
 
 ## 安装
 
+### 单独装
+
+```sh
+dsh plugin --profile <profile> add dsh-hub-callout
+```
+
+`<profile>` 换成你的 DSH profile 名（default 安装通常是 `desktop`；用 `dsh plugin --profile <name> list` 可列出）。只装本插件时，桌面外壳与其余 7 个 AI-Agent-Hub 插件**不会**跟着来。
+
 ### 整套装（一条命令）
 
 想把 AI-Agent-Hub 这套插件一次装齐（本插件 + 另外 7 个 + 依赖闭包）：
@@ -71,10 +79,12 @@ npx dsh-hub-suite            # 先看它要改什么：npx dsh-hub-suite --dry-r
 
 需要 Node.js 18+；它会把依赖写进 DSH profile 的 `package.json`、安装依赖，并把包名登记进 `dsh.profile.bundles`。装完重启 DeepSeek Harness。
 
+### 源码 / 本机开发装
+
 ```bash
 # 在 DSH 里（推荐）
 plugin_manager install_bundle  target=<此目录的绝对路径>
 ```
 
-或手工：复制包到 `$DSH_HOME/profiles/node_modules/@ai-agent-hub/`，再给目标 profile 的
-`cordis.patch.yml` 追加 `- insert: [{ id: hub-callout, name: '@ai-agent-hub/dsh-client-ui-hub-callout' }]`，重启生效。
+或手工：在目标 profile 的 `package.json` 里加 `link:` 依赖，并把 `dsh-hub-callout` 登记进
+`dsh.profile.bundles`，重启生效。

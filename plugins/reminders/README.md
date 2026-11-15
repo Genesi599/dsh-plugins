@@ -10,14 +10,18 @@ rules live in plain `.py` files you can edit, not in the prompt.
 
 ## Install
 
-Install just this plugin:
+### Install just this plugin
 
 ```sh
-dsh plugin --profile web add dsh-hub-reminders
+dsh plugin --profile <profile> add dsh-hub-reminders
 ```
 
-Or install the whole AI-Agent-Hub set — this plugin plus the seven others — with one
-command:
+Replace `<profile>` with your DSH profile name (`dsh plugin --profile <name> list` lists them).
+Installing this plugin alone does **not** pull in the other AI-Agent-Hub plugins — use the
+suite below for the full set.
+
+
+### Install the full suite
 
 ```sh
 npx dsh-hub-suite            # preview first with: npx dsh-hub-suite --dry-run

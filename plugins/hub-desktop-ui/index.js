@@ -2713,7 +2713,8 @@ export function apply(ctx, config = {}) {
       },
     }), 'hub-desktop-ui:/hub/queue');
 
-    // POST /hub/client-error：客户端渲染层报错落盘（Electron 看不到控制台，用文件观测）。
+  
+  // POST /hub/client-error：客户端渲染层报错落盘（Electron 看不到控制台，用文件观测）。
     hub.effect(() => server.register({
       kind: 'exact',
       path: '/hub/client-error',

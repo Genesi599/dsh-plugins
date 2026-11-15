@@ -70,7 +70,16 @@
 失败时：`ok:false`、`balance:null`、`error:"余额查询失败：…"`（用量独立，仍照常返回）。
 余额失败但有过成功读数时另给 `lastKnownBalance`（详情里显示「上次」），**`balance` 仍是 null**。
 
-## 挂载（本机 desktop profile）
+## 安装
+
+### 单独装
+
+```sh
+dsh plugin --profile <profile> add dsh-hub-quota-panel
+```
+
+`<profile>` 换成你的 DSH profile 名（`dsh plugin --profile <name> list` 可列出）。
+只装本插件时，AI-Agent-Hub 其余插件**不会**跟着来——要一次装齐请用下面的整套装。
 
 ### 整套装（一条命令）
 
@@ -89,16 +98,16 @@ npx dsh-hub-suite            # 先看它要改什么：npx dsh-hub-suite --dry-r
 ```json
 {
   "dependencies": {
-    "@ai-agent-hub/dsh-quota-panel": "link:<你的仓库路径>/dsh/plugins/quota-panel"
+    "dsh-hub-quota-panel": "link:<你的仓库路径>/dsh/plugins/quota-panel"
   },
-  "dsh": { "profile": { "bundles": [ "...", "@ai-agent-hub/dsh-quota-panel" ] } }
+  "dsh": { "profile": { "bundles": [ "...", "dsh-hub-quota-panel" ] } }
 }
 ```
 
 已执行（2026-10-21）：
 
 1. `~/.dsh/profiles/desktop/package.json` 备份为 `package.json.bak-quota-panel-20261021`，加依赖 + bundle 项；
-2. `node_modules/@ai-agent-hub/dsh-quota-panel` 建符号链接指向本目录（等价于 `pnpm install` 对 `link:` 做的事，
+2. `node_modules/dsh-hub-quota-panel` 建符号链接指向本目录（等价于 `pnpm install` 对 `link:` 做的事，
    以后跑 `pnpm install` 也会自动补）；
 3. `~/.dsh/profiles/desktop/cordis.patch.yml` **不需要改**——宿主行由本包自带的 `cordis.patch.yml` 插入。
 
@@ -152,5 +161,5 @@ F5 后的视觉验证点：
 ## 回滚
 
 1. profile `package.json` 覆盖回 `package.json.bak-quota-panel-20261021`；
-2. 删 `node_modules/@ai-agent-hub/dsh-quota-panel` 符号链接；
+2. 删 `node_modules/dsh-hub-quota-panel` 符号链接；
 3. 重启 DSH。
